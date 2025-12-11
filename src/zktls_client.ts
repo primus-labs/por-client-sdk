@@ -258,9 +258,9 @@ export class ZkTLSClient {
 
     return {
       attestationData: {
-        verification_type: "HASH_COMPARISON",
+        verification_type: Array.from({ length: plainResponse.length }, () => "HASH_COMPARISON"),
         public_data: attestResult,
-        private_data: { plain_json_response: plainResponse }
+        private_data: plainResponse
       },
       requestid: taskId
     };
