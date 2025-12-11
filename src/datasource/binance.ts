@@ -1,43 +1,10 @@
 import ccxt from "ccxt";
+import { makeHashComparisonParams } from "./helper.js";
 import { VERIFY_TYPE, RequestParams } from "../types.js";
 
 export interface BinanceAccount {
   key: string;
   secret: string;
-}
-
-function makeHashComparisonParams(origRequests: any[]): RequestParams {
-  if (!Array.isArray(origRequests)) {
-    throw new Error("Invalid input: origRequests must be an array");
-  }
-
-  const request_params: RequestParams = {
-    verifyType: 'HASH_COMPARISON',
-    requests: [],
-    responseResolves: [],
-  };
-
-  for (let i = 0; i < origRequests.length; i++) {
-    const origRequest = origRequests[i];
-
-    request_params.requests.push({
-      url: origRequest.url,
-      method: "GET",
-      header: { ...origRequest.headers },
-      body: "",
-    });
-
-    request_params.responseResolves.push([
-      {
-        keyName: `${i}`,
-        parseType: "json",
-        parsePath: "$",
-        op: "SHA256_EX",
-      },
-    ]);
-  }
-
-  return request_params;
 }
 
 export class Binance {
@@ -85,12 +52,7 @@ export class Binance {
       origRequests.push(exchange.sign("balance", "papi", "GET", signParams));
     }
 
-    if (verifyType == 'HASH_COMPARISON') {
-      return makeHashComparisonParams(origRequests);
-    }
-    else {
-      throw Error("not supported verify type");
-    }
+    return makeHashComparisonParams(origRequests, verifyType);
   }
 
   public getSpotAccountRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
@@ -105,12 +67,7 @@ export class Binance {
       );
     }
 
-    if (verifyType == 'HASH_COMPARISON') {
-      return makeHashComparisonParams(origRequests);
-    }
-    else {
-      throw Error("not supported verify type");
-    }
+    return makeHashComparisonParams(origRequests, verifyType);
   }
 
   public getAccounts(): BinanceAccount[] {
