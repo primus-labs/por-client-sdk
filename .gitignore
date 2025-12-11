@@ -6,4 +6,4 @@ logs
 package-lock.json
 
 .env
-*attestation.json
+/*attestation*.json
