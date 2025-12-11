@@ -2,13 +2,9 @@ import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { ethers } from "ethers";
 import dotenv from "dotenv";
 import { sleepMs } from "./utils.js";
+import { RequestParams, VERIFY_TYPE } from "./types.js";
 
 dotenv.config();
-
-export interface RequestParams {
-  requests: any[];
-  responseResolves: any[];
-}
 
 export interface Options {
   sslCipher?: string;
@@ -29,14 +25,12 @@ export class ZkTLSClient {
   /**
    * Main entry: perform ZKTLS attestation and task flow
    */
-  async doZkTLS(
-    requests: any[],
-    responseResolves: any[],
-    options: Options = {}
-  ): Promise<any> {
+  async doZkTLS(requestParams: RequestParams, options: Options = {}): Promise<any> {
+    if (requestParams.requests.length !== requestParams.responseResolves.length)
+      throw new Error("'requests' and 'responseResolves' size mismatch");
+
     const opts = this._getDefaultOptions(options);
 
-    this._validateInput(requests, responseResolves);
     await this._validateEnvVars();
 
     const { PRIVATE_KEY, CHAIN_ID, RPC_URL } = process.env;
@@ -56,16 +50,15 @@ export class ZkTLSClient {
       const submitResult = await this._submitZktlsTaskWithRetry(opts, attestParams);
 
       const attestResult = await this._attestWithRetry(
-        requests,
-        responseResolves,
+        requestParams,
         opts,
         attestParams,
         submitResult
       );
 
-      const taskResult = await this._verifyAndPollTaskResultWithRetry(attestResult);
+      /*const taskResult = */await this._verifyAndPollTaskResultWithRetry(attestResult);
 
-      const zkVmRequestData = await this._prepareZkVmRequestData(taskResult, attestResult);
+      const zkVmRequestData = await this._prepareZkVmRequestData(requestParams.verifyType, attestResult);
 
       console.log(`✅ Total execution time: ${Date.now() - startTime}ms`);
 
@@ -90,17 +83,6 @@ export class ZkTLSClient {
     return { ...defaults, ...options };
   }
 
-  /**
- * Validate request and response array inputs
- */
-  private _validateInput(requests: any[], responseResolves: any[]) {
-    if (!Array.isArray(requests) || requests.length === 0)
-      throw new Error("Invalid 'requests'");
-    if (!Array.isArray(responseResolves))
-      throw new Error("Invalid 'responseResolves'");
-    if (requests.length !== responseResolves.length)
-      throw new Error("'requests' and 'responseResolves' size mismatch");
-  }
 
   /**
    * Ensure all required environment variables are present
@@ -160,8 +142,7 @@ export class ZkTLSClient {
    * Run attestation with retries
    */
   private async _attestWithRetry(
-    requests: any[],
-    responseResolves: any[],
+    requestParams: RequestParams,
     opts: Options,
     attestParams: any,
     submitResult: any,
@@ -175,20 +156,17 @@ export class ZkTLSClient {
 
     while (true) {
       try {
-        let reqs = requests;
-        let resps = responseResolves;
+        let reqParams = requestParams;
 
         if (opts.requestParamsCallback) {
-          const cb = opts.requestParamsCallback();
-          reqs = cb.requests;
-          resps = cb.responseResolves;
+          reqParams = opts.requestParamsCallback();
         }
 
         const params = {
           ...attestParams,
           ...submitResult,
-          requests: reqs,
-          responseResolves: resps,
+          requests: reqParams.requests,
+          responseResolves: reqParams.responseResolves,
           sslCipher: opts.sslCipher,
           attMode: { algorithmType: opts.algorithmType },
           specialTask: opts.specialTask,
@@ -250,19 +228,26 @@ export class ZkTLSClient {
   /**
    * Prepare final zkVM attestation data
    */
-  private async _prepareZkVmRequestData(_taskResult: any, attestResult: any) {
+  private async _prepareZkVmRequestData(verifyType: VERIFY_TYPE, attestResult: any) {
     const taskId = attestResult[0].taskId;
     const plainResponse = this.primusNetwork.getAllJsonResponse(taskId);
 
     if (!plainResponse) throw new Error("Unable to get plain JSON response");
 
-    return {
-      attestationData: {
-        verification_type: Array.from({ length: plainResponse.length }, () => "HASH_COMPARISON"),
-        public_data: attestResult,
-        private_data: plainResponse
-      },
-      requestid: taskId
-    };
+
+    if (verifyType == 'HASH_COMPARISON') {
+      // todo!
+      return {
+        attestationData: {
+          verification_type: Array.from({ length: plainResponse.length }, () => "HASH_COMPARISON"),
+          public_data: attestResult,
+          private_data: plainResponse
+        },
+        requestid: taskId
+      };
+    } else {
+      return {};
+    }
+
   }
 }

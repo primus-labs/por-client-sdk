@@ -1,6 +1,6 @@
-import { ZkTLSClient, ProverClient, saveToFile } from "../src";
+import { ZkTLSClient, ProverClient, saveToFile, RequestParams } from "../src";
 
-function getRequestParams() {
+function getRequestParams(): RequestParams {
   const requests = [
     {
       url: "https://www.okx.com/api/v5/public/instruments?instType=SPOT&instId=BTC-USD",
@@ -22,15 +22,15 @@ function getRequestParams() {
   ];
   console.log('requests', requests);
   console.log('responseResolves', responseResolves);
-  return { requests, responseResolves };
+  return { verifyType: 'HASH_COMPARISON', requests, responseResolves };
 }
 
 async function main() {
   try {
     console.log("do zkTLS");
     const zktlsClient = new ZkTLSClient();
-    const { requests, responseResolves } = getRequestParams();
-    const zktlsResult = await zktlsClient.doZkTLS(requests, responseResolves, { noProxy: false });
+    const requestParams = getRequestParams();
+    const zktlsResult = await zktlsClient.doZkTLS(requestParams, { noProxy: false });
     if (zktlsResult && zktlsResult.attestationData) {
       saveToFile("attestation.json", JSON.stringify(zktlsResult.attestationData));
 
