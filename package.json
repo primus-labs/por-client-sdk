@@ -1,0 +1,37 @@
+{
+  "name": "@primuslabs/por-client-sdk",
+  "version": "0.1.0",
+  "author": "Primus Labs <dev@primuslabs.org>",
+  "description": "Primus PoR client sdk",
+  "license": "ISC",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "por-cli": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@primuslabs/network-core-sdk": "^0.1.4",
+    "axios": "^1.13.2",
+    "ccxt": "^4.5.11",
+    "dotenv": "^16.3.1",
+    "ethers": "^5.7.2",
+    "commander": "^14.0.1",
+    "form-data": "^4.0.4",
+    "undici": "^7.16.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.10.2",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
