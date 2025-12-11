@@ -40,7 +40,12 @@ export class ProverClient {
     return res.data;
   }
 
-  async submitTask(programId: string, attestationData: any): Promise<any> {
+  async submitTask(attestationData: string, programId?: string): Promise<any> {
+    programId = programId || process.env.PROGRAM_ID?.trim();
+    if (!programId) {
+      throw Error("missing programId");
+    }
+
     const form = new FormData();
     form.append("program_id", programId);
     form.append("attestation_data", attestationData);
@@ -51,12 +56,36 @@ export class ProverClient {
     return res.data;
   }
 
-  async getResult(taskId: string): Promise<any> {
-    const res = await this.client.get("/getResult", {
-      params: { task_id: taskId }
-    });
-    return res.data;
+  async getResult(taskId: string, timeoutMs: number = 60000, intervalMs: number = 5000): Promise<any> {
+    const start = Date.now();
+
+    const isPending = (status?: string) =>
+      status === "queued" || status === "running";
+
+    while (true) {
+      const elapsed = Date.now() - start;
+      if (elapsed > timeoutMs) {
+        throw new Error(`Timeout: task ${taskId} did not complete within ${timeoutMs}ms`);
+      }
+
+      try {
+        const res = await this.client.get("/getResult", {
+          params: { task_id: taskId }
+        });
+
+        const data = res.data;
+        if (!isPending(data?.status)) {
+          return data;
+        }
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          return null;
+        }
+      }
+      await new Promise(r => setTimeout(r, intervalMs));
+    }
   }
+
 
   async listTasks(status: string | null = null): Promise<any> {
     const res = await this.client.get("/listTasks", {

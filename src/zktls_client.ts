@@ -5,12 +5,12 @@ import { sleepMs } from "./utils.js";
 
 dotenv.config();
 
-interface RequestParams {
+export interface RequestParams {
   requests: any[];
   responseResolves: any[];
 }
 
-interface Options {
+export interface Options {
   sslCipher?: string;
   algorithmType?: string;
   specialTask?: any;
