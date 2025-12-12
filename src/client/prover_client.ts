@@ -1,18 +1,12 @@
 import axios, { AxiosInstance } from "axios";
 import FormData from "form-data";
 import fs from "fs";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-const DVC_SERVICE_URL = "http://localhost:38080"; // todo,default
+import { Config } from "../config.js";
 
 export class ProverClient {
   private client: AxiosInstance;
-
   constructor(timeout = 10000) {
-    const baseURL = process.env.DVC_SERVICE_URL?.trim() || DVC_SERVICE_URL;
-    this.client = axios.create({ baseURL, timeout });
+    this.client = axios.create({ baseURL: Config.ZKVM_SERVICE_URL, timeout });
   }
 
   async uploadProgram(
@@ -41,7 +35,7 @@ export class ProverClient {
   }
 
   async submitTask(attestationData: string, programId?: string): Promise<any> {
-    programId = programId || process.env.PROGRAM_ID?.trim();
+    programId = programId || Config.PROGRAM_ID;
     if (!programId) {
       throw Error("missing programId");
     }

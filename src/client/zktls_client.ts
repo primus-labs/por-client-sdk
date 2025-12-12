@@ -1,10 +1,8 @@
 import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { ethers } from "ethers";
-import dotenv from "dotenv";
 import { sleepMs } from "../utils.js";
 import { Options, RequestParams, RequestParamsInput, VERIFY_TYPE } from "../types.js";
-
-dotenv.config();
+import { Config } from "../config.js";
 
 export class ZkTLSClient {
   private primusNetwork: PrimusNetwork;
@@ -33,12 +31,9 @@ export class ZkTLSClient {
 
     const opts = this._getDefaultOptions(options);
 
-    await this._validateEnvVars();
-
-    const { PRIVATE_KEY, CHAIN_ID, RPC_URL } = process.env;
-
-    const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-    const wallet = new ethers.Wallet(PRIVATE_KEY!, provider);
+    const provider = new ethers.providers.JsonRpcProvider(Config.RPC_URL);
+    const wallet = Config.PRIVATE_KEY ? new ethers.Wallet(Config.PRIVATE_KEY, provider) : provider;
+    const { chainId } = await provider.getNetwork();
 
     const attestParams = {
       address: "0x810b7bacEfD5ba495bB688bbFD2501C904036AB7"
@@ -47,8 +42,13 @@ export class ZkTLSClient {
     const startTime = Date.now();
 
     try {
-      await this._initializePrimusNetwork(wallet, Number(CHAIN_ID));
+      await this._initializePrimusNetwork(wallet, chainId);
 
+      // TODO:
+      if (Config.ZKTLS_MODE === "DVC") {
+      } else if (Config.ZKTLS_MODE === "POR") {
+      } else {
+      }
       const submitResult = await this._submitZktlsTaskWithRetry(opts, attestParams);
 
       const attestResult = await this._attestWithRetry(
@@ -83,17 +83,6 @@ export class ZkTLSClient {
       requestParamsCallback: undefined,
     };
     return { ...defaults, ...options };
-  }
-
-
-  /**
-   * Ensure all required environment variables are present
-   */
-  private async _validateEnvVars(): Promise<void> {
-    const required = ["PRIVATE_KEY", "CHAIN_ID", "RPC_URL"];
-    for (const key of required) {
-      if (!process.env[key]) throw new Error(`Missing env: ${key}`);
-    }
   }
 
   /**
