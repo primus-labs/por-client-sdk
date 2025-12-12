@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { ProverClient } from "./prover_client.js";
+import { ProverClient } from "./client/prover_client.js";
 import fs from "fs";
 
 async function main() {

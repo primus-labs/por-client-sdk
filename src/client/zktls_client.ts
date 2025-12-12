@@ -1,19 +1,10 @@
 import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { ethers } from "ethers";
 import dotenv from "dotenv";
-import { sleepMs } from "./utils.js";
-import { RequestParams, VERIFY_TYPE } from "./types.js";
+import { sleepMs } from "../utils.js";
+import { Options, RequestParams, RequestParamsInput, VERIFY_TYPE } from "../types.js";
 
 dotenv.config();
-
-export interface Options {
-  sslCipher?: string;
-  algorithmType?: string;
-  specialTask?: any;
-  noProxy?: boolean;
-  runZkvm?: boolean;
-  requestParamsCallback?: () => RequestParams;
-}
 
 export class ZkTLSClient {
   private primusNetwork: PrimusNetwork;
@@ -22,10 +13,21 @@ export class ZkTLSClient {
     this.primusNetwork = new PrimusNetwork();
   }
 
+  async doZkTLS(params: RequestParamsInput, options: Options = {}): Promise<any> {
+    const requestParams = Array.isArray(params) ? params : [params];
+    let attestations: any[] = [];
+    for (const reqParams of requestParams) {
+      const data = await this._doZkTLS(reqParams, options);
+      attestations.push(data.attestationData);
+    }
+    return attestations;
+  }
+
   /**
    * Main entry: perform ZKTLS attestation and task flow
+   * TODO: optimized
    */
-  async doZkTLS(requestParams: RequestParams, options: Options = {}): Promise<any> {
+  private async _doZkTLS(requestParams: RequestParams, options: Options = {}): Promise<any> {
     if (requestParams.requests.length !== requestParams.responseResolves.length)
       throw new Error("'requests' and 'responseResolves' size mismatch");
 

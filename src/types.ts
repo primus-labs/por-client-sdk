@@ -5,4 +5,13 @@ export type RequestParams = {
   requests: AttNetworkRequest[];
   responseResolves: AttNetworkResponseResolve[][];
 };
+export type RequestParamsInput = RequestParams | RequestParams[];
 
+export interface Options {
+  sslCipher?: string;
+  algorithmType?: string;
+  specialTask?: any;
+  noProxy?: boolean;
+  runZkvm?: boolean;
+  requestParamsCallback?: () => RequestParams;
+}
