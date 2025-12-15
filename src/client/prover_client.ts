@@ -6,6 +6,7 @@ import { Config } from "../config.js";
 export class ProverClient {
   private client: AxiosInstance;
   constructor(timeout = 10000) {
+    Config.validate();
     this.client = axios.create({ baseURL: Config.ZKVM_SERVICE_URL, timeout });
   }
 
@@ -41,6 +42,9 @@ export class ProverClient {
     }
 
     const form = new FormData();
+    form.append("zktls_mode", Config.ZKTLS_MODE);
+    form.append("token", Config.TOKEN);
+    form.append("project_id", Config.PROJECT_ID);
     form.append("program_id", programId);
     form.append("attestation_data", attestationData);
 

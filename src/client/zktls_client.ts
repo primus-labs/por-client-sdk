@@ -8,6 +8,7 @@ export class ZkTLSClient {
   private primusNetwork: PrimusNetwork;
 
   constructor() {
+    Config.validate();
     this.primusNetwork = new PrimusNetwork();
   }
 

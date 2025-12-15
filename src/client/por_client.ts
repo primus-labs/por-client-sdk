@@ -20,9 +20,11 @@ export class PoRClient {
 
     const attestationData = await this.zktlsClient.doZkTLS(requestParams, options);
     if (attestationData) {
+      // optional
       saveToFile("attestation.json", JSON.stringify(attestationData));
-
-      console.log("do prove");
+    }
+    if (options?.runZkvm && attestationData) {
+      console.log("do zkVM");
 
       const submitResult = await this.proverClient.submitTask(JSON.stringify(attestationData))
       console.log("submitResult", submitResult);
