@@ -2,7 +2,7 @@ import { saveToFile } from "../utils.js";
 import { Options, RequestParamsInput } from "../types.js";
 import { ZkTLSClient } from "./zktls_client.js";
 import { ProverClient } from "./prover_client.js";
-import { Config } from "config.js";
+import { Config } from "../config.js";
 
 export class PoRClient {
   private zktlsClient: ZkTLSClient;
