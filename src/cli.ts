@@ -3,7 +3,7 @@
 import { Command } from "commander";
 import { ProverClient } from "./client/prover_client.js";
 import fs from "fs";
-import { Config } from "config.js";
+import { Config } from "./config.js";
 
 async function main() {
   const api = new ProverClient();
