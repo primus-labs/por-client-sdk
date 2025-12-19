@@ -44,6 +44,19 @@ async function main() {
       console.log('getResult:', result);
     });
 
+
+  program
+    .command("submitTaskAndGetResult")
+    .description("submitTask and getResult.")
+    .requiredOption("--filepath <FILEPATH>", "Attestation data file path")
+    .option("--programId <PROGRAM_ID>", "Program id")
+    .action(async (opts) => {
+      console.log("submitTask and getResult.");
+      const attestation_data = fs.readFileSync(opts.filepath, { encoding: "utf-8" });
+      const result = await api.doZkVM(attestation_data, opts.programId || Config.PROGRAM_ID);
+      console.log('result:', result);
+    });
+
   program.parseAsync();
 }
 
