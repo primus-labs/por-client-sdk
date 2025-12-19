@@ -1,7 +1,7 @@
 import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { ethers } from "ethers";
 import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
-import { Options, RequestParams, RequestParamsInput, VERIFY_TYPE } from "../types.js";
+import { Options, getDefaultOptions, RequestParams, RequestParamsInput, VERIFY_TYPE } from "../types.js";
 import { Config } from "../config.js";
 import { ClientError } from "../error.js";
 import { DataServiceClient } from "./data_service_client.js";
@@ -16,21 +16,6 @@ export class ZkTLSClient {
     this.primusNetwork = new PrimusNetwork();
   }
 
-
-  /**
-   * Default options for zkTLS attestation
-   */
-  private _getDefaultOptions(options: Options): Options {
-    const defaults: Options = {
-      sslCipher: "ECDHE-RSA-AES128-GCM-SHA256",
-      algorithmType: "mpctls",
-      specialTask: undefined,
-      noProxy: true,
-      runZkvm: true,
-      requestParamsCallback: undefined,
-    };
-    return { ...defaults, ...options };
-  }
 
   /**
    * Initialize PrimusNetwork SDK
@@ -225,7 +210,7 @@ export class ZkTLSClient {
       address: "0x9b7706746c6e19AD5EB5c1DaeEa4b4C09EEC8a5f"
     };
 
-    const opts = this._getDefaultOptions(options);
+    const opts = getDefaultOptions(options);
     try {
       const provider = new ethers.providers.JsonRpcProvider(Config.RPC_URL);
       const wallet = Config.PRIVATE_KEY ? new ethers.Wallet(Config.PRIVATE_KEY, provider) : provider;

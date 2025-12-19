@@ -15,3 +15,15 @@ export interface Options {
   runZkvm?: boolean;
   requestParamsCallback?: () => RequestParams;
 }
+
+export function getDefaultOptions(options: Options): Options {
+  const defaults: Options = {
+    sslCipher: "ECDHE-RSA-AES128-GCM-SHA256",
+    algorithmType: "mpctls",
+    specialTask: undefined,
+    noProxy: true,
+    runZkvm: true,
+    requestParamsCallback: undefined,
+  };
+  return { ...defaults, ...options };
+}
