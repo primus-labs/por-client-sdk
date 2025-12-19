@@ -92,7 +92,7 @@ export class ProverClient {
     }
   }
 
-  async getResultWithTimeout(taskId: string, timeoutMs: number = 10000, intervalMs: number = 3000): Promise<any> {
+  async getResultWithTimeout(taskId: string, timeoutMs: number = 600_000, intervalMs: number = 5000): Promise<any> {
     const start = Date.now();
 
     const isPending = (status?: string) =>
