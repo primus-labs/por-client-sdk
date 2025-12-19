@@ -2,10 +2,12 @@ import axios, { AxiosInstance } from "axios";
 import FormData from "form-data";
 import fs from "fs";
 import { Config } from "../config.js";
+import { ClientError } from "../error.js";
+import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
 
 export class ProverClient {
   private client: AxiosInstance;
-  constructor(timeout = 10000) {
+  constructor(timeout = 30_000) {
     Config.validate();
     this.client = axios.create({ baseURL: Config.ZKVM_SERVICE_URL, timeout });
   }
@@ -27,20 +29,11 @@ export class ProverClient {
     const res = await this.client.post("/uploadProgram", form, {
       headers: form.getHeaders()
     });
-    return res.data;
+
+    return this.unwrap("uploadProgram", res.data);
   }
 
-  async listPrograms(): Promise<any> {
-    const res = await this.client.get("/listPrograms");
-    return res.data;
-  }
-
-  async submitTask(attestationData: string, programId?: string): Promise<any> {
-    programId = programId || Config.PROGRAM_ID;
-    if (!programId) {
-      throw Error("missing programId");
-    }
-
+  async submitTask(attestationData: string, programId: string): Promise<any> {
     const form = new FormData();
     form.append("zktls_mode", Config.ZKTLS_MODE);
     form.append("token", Config.TOKEN);
@@ -51,58 +44,101 @@ export class ProverClient {
     const res = await this.client.post("/submitTask", form, {
       headers: form.getHeaders()
     });
-    return res.data;
+
+    return this.unwrap("submitTask", res.data);
   }
 
-  async getResult(taskId: string, timeoutMs: number = 60000, intervalMs: number = 5000): Promise<any> {
-    const start = Date.now();
+  async getResult(taskId: string): Promise<any> {
+    const res = await this.client.get("/getResult", {
+      params: { task_id: taskId }
+    });
+    return this.unwrap("getResult", res.data);
+  }
 
-    const isPending = (status?: string) =>
-      status === "queued" || status === "running";
+  private unwrap(op: string, data: any): any {
+    if (data.rc === 0) {
+      return data.result;
+    }
+
+    // data.rc === 1
+    const { mc, msg } = data;
+    throw new ClientError("73001", `${op} failed`, { op, mc, msg });
+  }
+
+
+  async submitTaskWithRetry(attestationData: string, programId: string, maxRetries = 4, baseDelay = 1000): Promise<any> {
+    let attempt = 0;
+    const start = Date.now();
+    console.log("Submitting task...");
 
     while (true) {
-      const elapsed = Date.now() - start;
-      if (elapsed > timeoutMs) {
-        throw new Error(`Timeout: task ${taskId} did not complete within ${timeoutMs}ms`);
-      }
-
       try {
-        const res = await this.client.get("/getResult", {
-          params: { task_id: taskId }
-        });
-
-        const data = res.data;
-        if (!isPending(data?.status)) {
-          return data;
-        }
+        const result = await this.submitTask(attestationData, programId);
+        console.log(`Submitting task done (${Date.now() - start}ms):`, result);
+        return result;
       } catch (err: any) {
-        if (err.response?.status === 404) {
-          return null;
+        const NO_RETRY_CODES = ["73001"]; // from zkvm
+        if (err instanceof ClientError && NO_RETRY_CODES.includes(err.code)) throw err;
+
+        attempt++;
+        if (attempt > maxRetries) {
+          throw new ClientError("73002", `Submitting task failed after ${maxRetries} retries`, makeErrData(err));
         }
+
+        const delay = baseDelay * 2 ** (attempt - 1);
+        console.warn(`Submitting task retrying in ${delay}ms...`);
+        await sleepMs(delay);
       }
-      await new Promise(r => setTimeout(r, intervalMs));
     }
   }
 
+  async getResultWithTimeout(taskId: string, timeoutMs: number = 10000, intervalMs: number = 3000): Promise<any> {
+    const start = Date.now();
 
-  async listTasks(status: string | null = null): Promise<any> {
-    const res = await this.client.get("/listTasks", {
-      params: { status }
-    });
-    return res.data;
+    const isPending = (status?: string) =>
+      status === undefined || status === "queued" || status === "running";
+
+    let errData: any = undefined;
+    while (true) {
+      const elapsed = Date.now() - start;
+      if (elapsed > timeoutMs) {
+        throw new ClientError("73003", `Timeout: cannot get task[${taskId}] complete result within ${timeoutMs}ms`, errData);
+      }
+
+      try {
+        const data = await this.getResult(taskId);
+        const { status } = data ?? {};
+        errData = { taskId, status };
+        if (!isPending(status)) {
+          return data;
+        }
+      } catch (err: any) {
+        const NO_RETRY_CODES = ["73001"]; // from zkvm
+        if (err instanceof ClientError && NO_RETRY_CODES.includes(err.code)) throw err;
+        errData = makeErrData(err);
+      }
+
+      console.warn(`Getting result retrying in ${intervalMs}ms...`);
+      await sleepMs(intervalMs);
+    }
   }
 
-  async deleteTask(taskId: string): Promise<any> {
-    const res = await this.client.delete("/deleteTask", {
-      data: { task_id: taskId }
-    });
-    return res.data;
+  private async _doZkVM(attestationData: string, programId: string): Promise<any> {
+    try {
+      const submitResult = await this.submitTaskWithRetry(attestationData, programId);
+      const result = await this.getResultWithTimeout(submitResult.task_id);
+      return result;
+    } catch (err: any) {
+      if (!(err instanceof ClientError)) {
+        err = new ClientError("73099", `Do doZkVM failed`, makeErrData(err));
+      }
+      await mockErrorReport(err);
+
+      throw err;
+    }
   }
 
-  async pauseTask(taskId: string): Promise<any> {
-    const res = await this.client.post("/pauseTask", null, {
-      params: { task_id: taskId }
-    });
-    return res.data;
+  async doZkVM(attestationData: string, programId: string): Promise<any> {
+    return await this._doZkVM(attestationData, programId);
   }
 }

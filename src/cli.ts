@@ -3,6 +3,7 @@
 import { Command } from "commander";
 import { ProverClient } from "./client/prover_client.js";
 import fs from "fs";
+import { Config } from "config.js";
 
 async function main() {
   const api = new ProverClient();
@@ -29,7 +30,7 @@ async function main() {
     .action(async (opts) => {
       console.log("submitTask");
       const attestation_data = fs.readFileSync(opts.filepath, { encoding: "utf-8" });
-      const result = await api.submitTask(attestation_data, opts.programId);
+      const result = await api.submitTask(attestation_data, opts.programId || Config.PROGRAM_ID);
       console.log('Task submitted:', result);
     });
 
@@ -41,24 +42,6 @@ async function main() {
       console.log("getResult");
       const result = await api.getResult(opts.taskId);
       console.log('getResult:', result);
-    });
-
-  program
-    .command("listTasks")
-    .description("listTasks.")
-    .action(async (_opts) => {
-      console.log("listTasks");
-      const result = await api.listTasks();
-      console.log('listTasks:', result);
-    });
-
-  program
-    .command("listPrograms")
-    .description("listPrograms.")
-    .action(async (_opts) => {
-      console.log("listPrograms");
-      const result = await api.listPrograms();
-      console.log('listPrograms:', result);
     });
 
   program.parseAsync();

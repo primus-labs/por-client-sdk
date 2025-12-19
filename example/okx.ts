@@ -8,9 +8,9 @@ async function main() {
     const client = new PoRClient();
     const result = await client.run(requestParams, { noProxy: false });
     // const result = await client.run([requestParams, requestParams], { noProxy: false },);
-    console.log("result", result);
+    console.log("result", JSON.stringify(result));
   } catch (err: any) {
-    console.log("err:", err);
+    console.log("err:", JSON.stringify(err));
   }
 }
 

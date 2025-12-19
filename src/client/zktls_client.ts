@@ -1,8 +1,12 @@
 import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { ethers } from "ethers";
-import { sleepMs } from "../utils.js";
+import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
 import { Options, RequestParams, RequestParamsInput, VERIFY_TYPE } from "../types.js";
 import { Config } from "../config.js";
+import { ClientError } from "../error.js";
+import { DataServiceClient } from "./data_service_client.js";
+import { v4 as uuidv4 } from 'uuid';
+
 
 export class ZkTLSClient {
   private primusNetwork: PrimusNetwork;
@@ -12,67 +16,9 @@ export class ZkTLSClient {
     this.primusNetwork = new PrimusNetwork();
   }
 
-  async doZkTLS(params: RequestParamsInput, options: Options = {}): Promise<any> {
-    const requestParams = Array.isArray(params) ? params : [params];
-    let attestations: any[] = [];
-    for (const reqParams of requestParams) {
-      const data = await this._doZkTLS(reqParams, options);
-      attestations.push(data.attestationData);
-    }
-    return attestations;
-  }
 
   /**
-   * Main entry: perform ZKTLS attestation and task flow
-   * TODO: optimized
-   */
-  private async _doZkTLS(requestParams: RequestParams, options: Options = {}): Promise<any> {
-    if (requestParams.requests.length !== requestParams.responseResolves.length)
-      throw new Error("'requests' and 'responseResolves' size mismatch");
-
-    const opts = this._getDefaultOptions(options);
-
-    const provider = new ethers.providers.JsonRpcProvider(Config.RPC_URL);
-    const wallet = Config.PRIVATE_KEY ? new ethers.Wallet(Config.PRIVATE_KEY, provider) : provider;
-    const { chainId } = await provider.getNetwork();
-
-    const attestParams = {
-      address: "0x810b7bacEfD5ba495bB688bbFD2501C904036AB7"
-    };
-
-    const startTime = Date.now();
-
-    try {
-      await this._initializePrimusNetwork(wallet, chainId);
-
-      // TODO:
-      if (Config.ZKTLS_MODE === "DVC") {
-      } else if (Config.ZKTLS_MODE === "POR") {
-      } else {
-      }
-      const submitResult = await this._submitZktlsTaskWithRetry(opts, attestParams);
-
-      const attestResult = await this._attestWithRetry(
-        requestParams,
-        opts,
-        attestParams,
-        submitResult
-      );
-
-      /*const taskResult = */await this._verifyAndPollTaskResultWithRetry(attestResult);
-
-      const zkVmRequestData = await this._prepareZkVmRequestData(requestParams.verifyType, attestResult);
-
-      console.log(`✅ Total execution time: ${Date.now() - startTime}ms`);
-
-      return zkVmRequestData;
-    } catch (err: any) {
-      throw new Error(`ZKTLS execution failed: ${err.message || err}`);
-    }
-  }
-
-  /**
-   * Default options for ZKTLS attestation
+   * Default options for zkTLS attestation
    */
   private _getDefaultOptions(options: Options): Options {
     const defaults: Options = {
@@ -95,37 +41,50 @@ export class ZkTLSClient {
       const result = await this.primusNetwork.init(wallet, chainId, "native");
       console.log("✅ PrimusNetwork initialized:", result);
     } catch (err: any) {
-      throw new Error(`PrimusNetwork init failed: ${err.message || err}`);
+      throw new ClientError("71002", `Initializing PrimusNetwork failed`, makeErrData(err));
     }
   }
 
   /**
-   * Submit ZKTLS task with retry and exponential backoff
+   * Submit zkTLS task with retry and exponential backoff
    */
-  private async _submitZktlsTaskWithRetry(
+  private async _submitZkTLSTaskWithRetry(
     _opts: Options,
     attestParams: any,
-    maxRetries = 5,
+    maxRetries = 4,
     baseDelay = 1000
   ): Promise<any> {
     let attempt = 0;
     const start = Date.now();
-
-    console.log("📝 Submitting ZKTLS task...");
+    console.log("📝 Submitting zkTLS task...");
 
     while (true) {
       try {
-        const result = await this.primusNetwork.submitTask(attestParams);
+        let result;
+        if (Config.ZKTLS_MODE === "DVC") {
+          result = await this.primusNetwork.submitTask(attestParams);
+        } else if (Config.ZKTLS_MODE === "POR") {
+          const client = new DataServiceClient(Config.DATA_SERVICE_URL);
+          const bizId = uuidv4();
+          const token = Config.TOKEN;
+          const projectId = Config.PROJECT_ID;
+          result = await client.submitTask(bizId, projectId, token);
+        }
         console.log(`✅ submitTask done (${Date.now() - start}ms):`, result);
         return result;
       } catch (err: any) {
+        const NO_RETRY_CODES = ["72001"]; // from data service client
+        if (err instanceof ClientError && NO_RETRY_CODES.includes(err.code)) throw err;
+
         attempt++;
         console.warn(`⚠️ submitTask attempt ${attempt} failed: ${err.message}`);
+        if (attempt > maxRetries) {
+          throw new ClientError("71003", `Submitting zkTLS task failed after ${maxRetries} retries`, makeErrData(err));
+        }
 
-        if (attempt > maxRetries)
-          throw new Error(`submitTask failed after ${maxRetries} retries`);
-
-        await sleepMs(baseDelay * 2 ** (attempt - 1));
+        const delay = baseDelay * 2 ** (attempt - 1);
+        console.warn(`⏳ submitTask retrying in ${delay}ms...`);
+        await sleepMs(delay);
       }
     }
   }
@@ -138,20 +97,18 @@ export class ZkTLSClient {
     opts: Options,
     attestParams: any,
     submitResult: any,
-    maxRetries = 3,
+    maxRetries = 4,
     baseDelay = 1000
   ): Promise<any> {
     let attempt = 0;
     const start = Date.now();
-
     console.log("⚙️ Running attestation...");
 
     while (true) {
       try {
-        let reqParams = requestParams;
-
-        if (opts.requestParamsCallback) {
-          reqParams = opts.requestParamsCallback();
+        const reqParams = opts.requestParamsCallback ? opts.requestParamsCallback() : requestParams;
+        if (reqParams.requests.length !== reqParams.responseResolves.length) {
+          throw new ClientError("71001", `Request params size mismatch ${reqParams.requests.length} != ${reqParams.responseResolves.length}`);
         }
 
         const params = {
@@ -167,19 +124,32 @@ export class ZkTLSClient {
         };
 
         const result = await this.primusNetwork.attest(params, 5 * 60 * 1000);
-
-        if (!result?.[0]?.attestation) throw new Error("Invalid attestation result");
         console.log(`✅ attest done (${Date.now() - start}ms):`, result);
-
         return result;
       } catch (err: any) {
         attempt++;
-        console.warn(`⚠️ attest attempt ${attempt} failed: ${err.message}`);
 
-        if (attempt > maxRetries)
-          throw new Error(`attest failed after ${maxRetries} retries`);
+        if (err) {
+          const info: Record<string, any> = {};
+          if (err.code) info.code = err.code;
+          if (err.message) info.message = err.message;
+          if (err.data) info.data = err.data;
+          console.warn(`⚠️ attest attempt ${attempt} failed: ${info}`);
 
-        await sleepMs(baseDelay * 2 ** (attempt - 1));
+          const NO_RETRY_CODES = ["71001"]; // TODO:
+          if (info.code && NO_RETRY_CODES.includes(info.code)) {
+            if (err instanceof ClientError) throw err;
+            throw new ClientError("71004", `Attesting zkTLS failed`, makeErrData(err));
+          }
+        }
+
+        if (attempt > maxRetries) {
+          throw new ClientError("71005", `Attesting zkTLS failed after ${maxRetries} retries`, makeErrData(err));
+        }
+
+        const delay = baseDelay * 2 ** (attempt - 1);
+        console.warn(`⏳ attest retrying in ${delay}ms...`);
+        await sleepMs(delay);
       }
     }
   }
@@ -189,13 +159,12 @@ export class ZkTLSClient {
    */
   private async _verifyAndPollTaskResultWithRetry(
     attestResult: any,
-    maxRetries = 5,
+    maxRetries = 4,
     baseDelay = 1000
   ): Promise<any> {
     let attempt = 0;
     const start = Date.now();
-
-    console.log("🔍 Polling task result...");
+    console.log("🔍 Verifying task...");
 
     while (true) {
       try {
@@ -208,11 +177,13 @@ export class ZkTLSClient {
       } catch (err: any) {
         attempt++;
         console.warn(`⚠️ verify attempt ${attempt} failed: ${err.message}`);
+        if (attempt > maxRetries) {
+          throw new ClientError("71006", `Verifying task failed after ${maxRetries} retries`, makeErrData(err));
+        }
 
-        if (attempt > maxRetries)
-          throw new Error(`verifyAndPollTaskResult failed after ${maxRetries} retries`);
-
-        await sleepMs(baseDelay * 2 ** (attempt - 1));
+        const delay = baseDelay * 2 ** (attempt - 1);
+        console.warn(`⏳ verify retrying in ${delay}ms...`);
+        await sleepMs(delay);
       }
     }
   }
@@ -224,8 +195,9 @@ export class ZkTLSClient {
     const taskId = attestResult[0].taskId;
     const plainResponse = this.primusNetwork.getAllJsonResponse(taskId);
 
-    if (!plainResponse) throw new Error("Unable to get plain JSON response");
-
+    if (!plainResponse) {
+      throw new ClientError("71007", `Unable to get plain JSON response.`);
+    }
 
     if (verifyType == 'HASH_COMPARISON') {
       // todo!
@@ -241,5 +213,58 @@ export class ZkTLSClient {
       return {};
     }
 
+  }
+
+
+  /**
+   * Main entry: perform zkTLS attestation and task flow
+   */
+  private async _doZkTLS(requestParams: RequestParams, options: Options = {}): Promise<any> {
+    const startTime = Date.now();
+    const attestParams = {
+      address: "0x9b7706746c6e19AD5EB5c1DaeEa4b4C09EEC8a5f"
+    };
+
+    const opts = this._getDefaultOptions(options);
+    try {
+      const provider = new ethers.providers.JsonRpcProvider(Config.RPC_URL);
+      const wallet = Config.PRIVATE_KEY ? new ethers.Wallet(Config.PRIVATE_KEY, provider) : provider;
+      const { chainId } = await provider.getNetwork();
+
+      await this._initializePrimusNetwork(wallet, chainId);
+
+      const submitResult = await this._submitZkTLSTaskWithRetry(opts, attestParams);
+
+      const attestResult = await this._attestWithRetry(
+        requestParams,
+        opts,
+        attestParams,
+        submitResult
+      );
+
+      await this._verifyAndPollTaskResultWithRetry(attestResult);
+
+      const zkVmRequestData = await this._prepareZkVmRequestData(requestParams.verifyType, attestResult);
+
+      console.log(`✅ Total execution time: ${Date.now() - startTime}ms`);
+
+      return zkVmRequestData;
+    } catch (err: any) {
+      if (!(err instanceof ClientError)) {
+        err = new ClientError("71099", `Do zkTLS failed`, makeErrData(err));
+      }
+      await mockErrorReport(err);
+
+      throw err;
+    }
+  }
+  async doZkTLS(params: RequestParamsInput, options: Options = {}): Promise<any> {
+    const requestParams = Array.isArray(params) ? params : [params];
+    let attestations: any[] = [];
+    for (const reqParams of requestParams) {
+      const data = await this._doZkTLS(reqParams, options);
+      attestations.push(data.attestationData);
+    }
+    return attestations;
   }
 }
