@@ -18,7 +18,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@primuslabs/network-core-sdk": "^0.1.4",
+    "@primuslabs/network-core-sdk": "0.1.4",
     "axios": "^1.13.2",
     "ccxt": "^4.5.11",
     "commander": "^14.0.1",

@@ -20,10 +20,10 @@ export class ZkTLSClient {
   /**
    * Initialize PrimusNetwork SDK
    */
-  private async _initializePrimusNetwork(wallet: any, chainId: number): Promise<void> {
+  private async _initializePrimusNetwork(opts: Options, wallet: any, chainId: number): Promise<void> {
     try {
       console.log("🚀 Initializing PrimusNetwork...");
-      const result = await this.primusNetwork.init(wallet, chainId, "native");
+      const result = await this.primusNetwork.init(wallet, chainId, opts.noProxy === true ? "native" : undefined);
       console.log("✅ PrimusNetwork initialized:", result);
     } catch (err: any) {
       throw new ClientError("71002", `Initializing PrimusNetwork failed`, makeErrData(err));
@@ -216,7 +216,7 @@ export class ZkTLSClient {
       const wallet = Config.PRIVATE_KEY ? new ethers.Wallet(Config.PRIVATE_KEY, provider) : provider;
       const { chainId } = await provider.getNetwork();
 
-      await this._initializePrimusNetwork(wallet, chainId);
+      await this._initializePrimusNetwork(opts, wallet, chainId);
 
       const submitResult = await this._submitZkTLSTaskWithRetry(opts, attestParams);
 
