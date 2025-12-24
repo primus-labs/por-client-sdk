@@ -15,7 +15,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "jest"
+    "test": "jest",
+    "publish": "npm publish --access public"
   },
   "dependencies": {
     "@primuslabs/network-core-sdk": "0.1.4",
