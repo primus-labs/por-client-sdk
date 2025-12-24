@@ -16,15 +16,15 @@ npm run build
 
 ## Usage
 
-1. Copy `.env.example` to `.env `and configure your environment variables.
+1. Copy `.env.example` to `.env `and configure your environment variables. (See [Configuration](#configuration).)
 2. Ensure required fields are set:
    - `TOKEN` and `PROJECT_ID` for authentication.
+   - `PROGRAM_ID` for program.
 3. Run the example:
+   ```sh
+   npx tsx example/okx.ts
+   ```
 
-
-## Data Source
-
-TODO.
 
 ## Configuration
 
@@ -50,10 +50,9 @@ Below is a complete description of all fields defined in `.env.example`.
 
 ## 3. **Other Settings (Optional)**
 
-| Variable           | Required | Description                                                        |
-| ------------------ | -------- | ------------------------------------------------------------------ |
-| `LOG_VERBOSE`      | Optional | Logging verbosity (`0` = off; higher numbers = more detail).       |
-| `ZKVM_SERVICE_URL` | Optional | Endpoint of the zkVM service.                                      |
+| Variable           | Required | Description                                                  |
+| ------------------ | -------- | ------------------------------------------------------------ |
+| `LOG_VERBOSE`      | Optional | Logging verbosity (`0` = off; higher numbers = more detail). |
 
 
 ## 4. **Blockchain Configuration (Optional)**
@@ -62,15 +61,5 @@ Below is a complete description of all fields defined in `.env.example`.
 | Variable      | Required | Description                                |
 | ------------- | -------- | ------------------------------------------ |
 | `RPC_URL`     | Optional | RPC endpoint for the selected chain.       |
-| `PRIVATE_KEY` | Optional | Wallet private key for signing operations. |
-
-
-## 5. **zkTLS Mode**
-
-| Variable     | Required | Description                           |
-| ------------ | -------- | ------------------------------------- |
-| `ZKTLS_MODE` | Optional | zkTLS mode: `POR` (default) or `DVC`. |
-
-* If `ZKTLS_MODE=DVC`, a valid `PRIVATE_KEY` **must** be provided.
 
 
