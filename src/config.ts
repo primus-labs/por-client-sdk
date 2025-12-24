@@ -1,25 +1,87 @@
-import { assertEnvVars } from "./utils.js";
-import * as dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 
-export class Config {
-  static readonly TOKEN = process.env.TOKEN?.trim() ?? "";
-  static readonly PROJECT_ID = process.env.PROJECT_ID?.trim() ?? "";
-  static readonly PROGRAM_ID = process.env.PROGRAM_ID?.trim() ?? "";
+export interface SdkConfig {
+  token?: string;
+  projectId?: string;
+  programId?: string;
 
-  static readonly LOG_VERBOSE = Number(process.env.LOG_VERBOSE ?? 0);
-  static readonly ZKVM_SERVICE_URL = process.env.ZKVM_SERVICE_URL?.trim() ?? "https://api-por.primuslabs.xyz:38080";
-  static readonly DATA_SERVICE_URL = process.env.DATA_SERVICE_URL?.trim() ?? "http://api-dev.padolabs.org:38101";
+  logVerbose?: number;
 
-  static readonly RPC_URL = process.env.RPC_URL?.trim() ?? "https://mainnet.base.org";
-  static readonly PRIVATE_KEY = process.env.PRIVATE_KEY?.trim() ?? "";
+  zkvmServiceUrl?: string;
+  dataServiceUrl?: string;
 
-  static readonly ZKTLS_MODE = process.env.ZKTLS_MODE?.trim() ?? "POR";
+  rpcUrl?: string;
+  privateKey?: string;
 
-  static validate() {
-    if (this.ZKTLS_MODE === "POR") {
-      assertEnvVars(this, ["TOKEN", "PROJECT_ID"] as const);
+  zktlsMode?: "POR" | string;
+}
+
+export function getDefaultConfig(): Required<SdkConfig> {
+  return {
+    token: "",
+    projectId: "",
+    programId: "",
+
+    logVerbose: 0,
+
+    zkvmServiceUrl: "https://api-por.primuslabs.xyz:38080",
+    dataServiceUrl: "http://api-dev.padolabs.org:38101",
+
+    rpcUrl: "https://mainnet.base.org",
+    privateKey: "",
+
+    zktlsMode: "POR",
+  };
+}
+
+export function loadConfigFromEnv(): SdkConfig {
+  const envConfig: SdkConfig = {
+    token: process.env.TOKEN?.trim(),
+    projectId: process.env.PROJECT_ID?.trim(),
+    programId: process.env.PROGRAM_ID?.trim(),
+
+    logVerbose: process.env.LOG_VERBOSE !== undefined ? Number(process.env.LOG_VERBOSE) : undefined,
+
+    zkvmServiceUrl: process.env.ZKVM_SERVICE_URL?.trim(),
+    dataServiceUrl: process.env.DATA_SERVICE_URL?.trim(),
+
+    rpcUrl: process.env.RPC_URL?.trim(),
+    privateKey: process.env.PRIVATE_KEY?.trim(),
+
+    zktlsMode: process.env.ZKTLS_MODE?.trim(),
+  };
+
+  // filter undefined field
+  return Object.fromEntries(Object.entries(envConfig).filter(([_, value]) => value !== undefined)) as Partial<SdkConfig>;
+}
+
+
+export function resolveSdkConfig(
+  userConfig: SdkConfig = {}
+): Required<SdkConfig> {
+  const config: Required<SdkConfig> = {
+    ...getDefaultConfig(),
+    ...userConfig,
+    ...loadConfigFromEnv(),
+  };
+
+  // validate
+  if (config.zktlsMode === "POR") {
+    if (!config.token || !config.projectId || !config.programId) {
+      throw new Error("TOKEN, PROJECT_ID, PROGRAM_ID are required in POR mode");
     }
   }
+
+  return config;
+}
+
+export function printConfig(config: SdkConfig, tag: string) {
+  const maskedConfig = {
+    ...config,
+    token: config.token ? `${config.token.slice(0, 6)}***` : undefined,
+    privateKey: config.privateKey ? `${config.privateKey.slice(0, 6)}***` : undefined,
+  };
+  const filterConfig = Object.fromEntries(Object.entries(maskedConfig).filter(([_, value]) => value !== undefined)) as Partial<SdkConfig>;
+  console.log(tag, "config", filterConfig);
 }
 

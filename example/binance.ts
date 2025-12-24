@@ -11,7 +11,7 @@ async function main() {
     console.log("result", JSON.stringify(result));
     console.log('proof fixture(json):', JSON.parse(result?.details?.proof_fixture ?? "{}"));
   } catch (err: any) {
-    console.log("err:", JSON.stringify(err));
+    console.log("err:", err?.message, JSON.stringify(err));
   }
 }
 

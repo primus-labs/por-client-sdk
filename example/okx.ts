@@ -10,7 +10,7 @@ async function main() {
     // const result = await client.run([requestParams, requestParams], { noProxy: false },);
     console.log("result", JSON.stringify(result));
   } catch (err: any) {
-    console.log("err:", JSON.stringify(err));
+    console.log("err:", err?.message, JSON.stringify(err));
   }
 }
 

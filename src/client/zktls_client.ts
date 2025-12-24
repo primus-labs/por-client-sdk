@@ -2,17 +2,18 @@ import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { ethers } from "ethers";
 import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
 import { Options, getDefaultOptions, RequestParams, RequestParamsInput, VERIFY_TYPE } from "../types.js";
-import { Config } from "../config.js";
+import { SdkConfig, resolveSdkConfig } from "../config.js";
 import { ClientError } from "../error.js";
 import { DataServiceClient } from "./data_service_client.js";
 import { v4 as uuidv4 } from 'uuid';
 
 
 export class ZkTLSClient {
+  private readonly config: Required<SdkConfig>;
   private primusNetwork: PrimusNetwork;
 
-  constructor() {
-    Config.validate();
+  constructor(config: SdkConfig = {}) {
+    this.config = resolveSdkConfig(config);
     this.primusNetwork = new PrimusNetwork();
   }
 
@@ -46,13 +47,13 @@ export class ZkTLSClient {
     while (true) {
       try {
         let result;
-        if (Config.ZKTLS_MODE === "DVC") {
+        if (this.config.zktlsMode === "DVC") {
           result = await this.primusNetwork.submitTask(attestParams);
-        } else if (Config.ZKTLS_MODE === "POR") {
-          const client = new DataServiceClient(Config.DATA_SERVICE_URL);
+        } else if (this.config.zktlsMode === "POR") {
+          const client = new DataServiceClient(this.config.dataServiceUrl);
           const bizId = uuidv4();
-          const token = Config.TOKEN;
-          const projectId = Config.PROJECT_ID;
+          const token = this.config.token;
+          const projectId = this.config.projectId;
           result = await client.submitTask(bizId, projectId, token);
         }
         console.log(`✅ submitTask done (${Date.now() - start}ms):`, result);
@@ -212,8 +213,8 @@ export class ZkTLSClient {
 
     const opts = getDefaultOptions(options);
     try {
-      const provider = new ethers.providers.JsonRpcProvider(Config.RPC_URL);
-      const wallet = Config.PRIVATE_KEY ? new ethers.Wallet(Config.PRIVATE_KEY, provider) : provider;
+      const provider = new ethers.providers.JsonRpcProvider(this.config.rpcUrl);
+      const wallet = this.config.privateKey ? new ethers.Wallet(this.config.privateKey, provider) : provider;
       const { chainId } = await provider.getNetwork();
 
       await this._initializePrimusNetwork(opts, wallet, chainId);

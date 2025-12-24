@@ -2,15 +2,18 @@ import { saveToFile } from "../utils.js";
 import { Options, getDefaultOptions, RequestParamsInput } from "../types.js";
 import { ZkTLSClient } from "./zktls_client.js";
 import { ProverClient } from "./prover_client.js";
-import { Config } from "../config.js";
+import { SdkConfig, resolveSdkConfig, printConfig } from "../config.js";
 
 export class PoRClient {
+  private readonly config: Required<SdkConfig>;
   private zktlsClient: ZkTLSClient;
   private proverClient: ProverClient;
 
-  constructor() {
-    this.zktlsClient = new ZkTLSClient();
-    this.proverClient = new ProverClient();
+  constructor(config: SdkConfig = {}) {
+    this.config = resolveSdkConfig(config);
+    printConfig(this.config, 'PoRClient');
+    this.zktlsClient = new ZkTLSClient(this.config);
+    this.proverClient = new ProverClient(this.config);
   }
 
   /**
@@ -28,7 +31,7 @@ export class PoRClient {
 
     if (opts.runZkvm && attestationData) {
       console.log("do zkVM");
-      const result = await this.proverClient.doZkVM(JSON.stringify(attestationData), Config.PROGRAM_ID)
+      const result = await this.proverClient.doZkVM(JSON.stringify(attestationData));
       console.log("result", result);
       return result;
     }

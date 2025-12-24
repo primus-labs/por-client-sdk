@@ -3,7 +3,6 @@
 import { Command } from "commander";
 import { ProverClient } from "./client/prover_client.js";
 import fs from "fs";
-import { Config } from "./config.js";
 
 async function main() {
   const api = new ProverClient();
@@ -26,11 +25,10 @@ async function main() {
     .command("submitTask")
     .description("submitTask.")
     .requiredOption("--filepath <FILEPATH>", "Attestation data file path")
-    .option("--programId <PROGRAM_ID>", "Program id")
     .action(async (opts) => {
       console.log("submitTask");
       const attestation_data = fs.readFileSync(opts.filepath, { encoding: "utf-8" });
-      const result = await api.submitTask(attestation_data, opts.programId || Config.PROGRAM_ID);
+      const result = await api.submitTask(attestation_data);
       console.log('Task submitted:', result);
     });
 
@@ -49,11 +47,10 @@ async function main() {
     .command("submitTaskAndGetResult")
     .description("submitTask and getResult.")
     .requiredOption("--filepath <FILEPATH>", "Attestation data file path")
-    .option("--programId <PROGRAM_ID>", "Program id")
     .action(async (opts) => {
       console.log("submitTask and getResult.");
       const attestation_data = fs.readFileSync(opts.filepath, { encoding: "utf-8" });
-      const result = await api.doZkVM(attestation_data, opts.programId || Config.PROGRAM_ID);
+      const result = await api.doZkVM(attestation_data);
       console.log('result:', result);
     });
 
