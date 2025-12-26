@@ -9,7 +9,7 @@ async function main() {
     const client = new PoRClient();
     const result = await client.run([requestParams1, requestParams2]);
     console.log("result", JSON.stringify(result));
-    console.log('proof fixture(json):', JSON.parse(result?.details?.proof_fixture ?? "{}"));
+    console.log('proof fixture(json):', JSON.parse(result?.proof_fixture ?? "{}"));
   } catch (err: any) {
     console.log("err:", err?.message, JSON.stringify(err));
   }
