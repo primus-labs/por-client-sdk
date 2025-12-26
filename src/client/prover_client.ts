@@ -120,7 +120,7 @@ export class ProverClient {
         errData = makeErrData(err);
       }
 
-      console.warn(`Getting result retrying in ${intervalMs}ms...`);
+      console.warn(`Getting result in ${intervalMs}ms...`);
       await sleepMs(intervalMs);
     }
   }

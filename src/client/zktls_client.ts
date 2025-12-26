@@ -1,7 +1,7 @@
 import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { ethers } from "ethers";
 import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
-import { Options, getDefaultOptions, RequestParams, RequestParamsInput, VERIFY_TYPE } from "../types.js";
+import { Options, getDefaultOptions, RequestParams, RequestParamsInput, VERIFY_TYPE, RequestParamsCallback } from "../types.js";
 import { SdkConfig, resolveSdkConfig } from "../config.js";
 import { ClientError } from "../error.js";
 import { DataServiceClient } from "./data_service_client.js";
@@ -83,6 +83,7 @@ export class ZkTLSClient {
     opts: Options,
     attestParams: any,
     submitResult: any,
+    requestParamsCallback?: RequestParamsCallback,
     maxRetries = 4,
     baseDelay = 1000
   ): Promise<any> {
@@ -92,7 +93,7 @@ export class ZkTLSClient {
 
     while (true) {
       try {
-        const reqParams = opts.requestParamsCallback ? opts.requestParamsCallback() : requestParams;
+        const reqParams = requestParamsCallback ? requestParamsCallback() : requestParams;
         if (reqParams.requests.length !== reqParams.responseResolves.length) {
           throw new ClientError("71001", `Request params size mismatch ${reqParams.requests.length} != ${reqParams.responseResolves.length}`);
         }
@@ -120,7 +121,7 @@ export class ZkTLSClient {
           if (err.code) info.code = err.code;
           if (err.message) info.message = err.message;
           if (err.data) info.data = err.data;
-          console.warn(`⚠️ attest attempt ${attempt} failed: ${info}`);
+          console.warn(`⚠️ attest attempt ${attempt} failed:`, info);
 
           const NO_RETRY_CODES = ["71001"]; // TODO:
           if (info.code && NO_RETRY_CODES.includes(info.code)) {
@@ -205,7 +206,7 @@ export class ZkTLSClient {
   /**
    * Main entry: perform zkTLS attestation and task flow
    */
-  private async _doZkTLS(requestParams: RequestParams, options: Options = {}): Promise<any> {
+  private async _doZkTLS(requestParams: RequestParams, options: Options = {}, requestParamsCallback?: RequestParamsCallback): Promise<any> {
     const startTime = Date.now();
     const attestParams = {
       address: "0x9b7706746c6e19AD5EB5c1DaeEa4b4C09EEC8a5f"
@@ -225,7 +226,8 @@ export class ZkTLSClient {
         requestParams,
         opts,
         attestParams,
-        submitResult
+        submitResult,
+        requestParamsCallback,
       );
 
       await this._verifyAndPollTaskResultWithRetry(attestResult);
@@ -246,9 +248,17 @@ export class ZkTLSClient {
   }
   async doZkTLS(params: RequestParamsInput, options: Options = {}): Promise<any> {
     const requestParams = Array.isArray(params) ? params : [params];
+    const callbacks: (RequestParamsCallback | undefined)[] = options.requestParamsCallback
+      ? Array.isArray(options.requestParamsCallback) ? options.requestParamsCallback : [options.requestParamsCallback]
+      : [];
+
+    if (callbacks.length > 0 && callbacks.length !== requestParams.length) {
+      throw new ClientError("71008", `Request params size ${requestParams.length} != callbacks size ${callbacks.length}`);
+    }
+
     let attestations: any[] = [];
-    for (const reqParams of requestParams) {
-      const data = await this._doZkTLS(reqParams, options);
+    for (let i = 0; i < requestParams.length; i++) {
+      const data = await this._doZkTLS(requestParams[i], options, callbacks[i]);
       attestations.push(data.attestationData);
     }
     return attestations;

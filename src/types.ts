@@ -6,6 +6,7 @@ export type RequestParams = {
   responseResolves: AttNetworkResponseResolve[][];
 };
 export type RequestParamsInput = RequestParams | RequestParams[];
+export type RequestParamsCallback = () => RequestParams;
 
 export interface Options {
   sslCipher?: string;
@@ -13,7 +14,7 @@ export interface Options {
   specialTask?: any;
   noProxy?: boolean;
   runZkvm?: boolean;
-  requestParamsCallback?: () => RequestParams;
+  requestParamsCallback?: RequestParamsCallback | RequestParamsCallback[];
 }
 
 export function getDefaultOptions(options: Options): Options {
