@@ -54,7 +54,9 @@ export class ZkTLSClient {
           const bizId = uuidv4();
           const token = this.config.token;
           const projectId = this.config.projectId;
-          result = await client.submitTask(bizId, projectId, token);
+          const { taskId, taskTxHash, taskAttestors, submitterAddress } = await client.submitTask(bizId, projectId, token);
+          result = { taskId, taskTxHash, taskAttestors };
+          attestParams.address = submitterAddress;
         }
         console.log(`✅ submitTask done (${Date.now() - start}ms):`, result);
         return result;

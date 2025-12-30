@@ -12,6 +12,7 @@ export interface SubmitTaskResult {
   taskId: string;
   taskTxHash: string;
   taskAttestors: string[];
+  submitterAddress: string,
 }
 
 export class DataServiceClient {
@@ -40,6 +41,7 @@ export class DataServiceClient {
       taskId: raw.taskId,
       taskTxHash: raw.taskTxHash,
       taskAttestors: raw.taskAttestors,
+      submitterAddress: raw.submitterAddress,
     };
   }
 
