@@ -1,0 +1,123 @@
+import fs from "fs";
+import path from "path";
+import { z } from "zod";
+import yaml from "js-yaml";
+
+export type Exchanges = "binance" | "aster";
+
+const BinanceKindSchema = z.enum(["spot", "usds-futures", "coin-futures", "unified"]);
+const AsterKindSchema = z.enum(["spot", "usds-futures"]);
+export type AsterKind = z.infer<typeof AsterKindSchema>;
+export type BinanceKind = z.infer<typeof BinanceKindSchema>;
+
+const BinanceAccountSchema = z.object({
+  apiKey: z.string().min(1),
+  apiSecret: z.string().min(1),
+  enabled: z.boolean().optional().default(true),
+  description: z.string().optional().default(""),
+  kind: z.array(BinanceKindSchema).min(1).refine(arr => new Set(arr).size === arr.length, { message: "kind must be unique" }),
+});
+export type BinanceAccount = z.infer<typeof BinanceAccountSchema>;
+
+const AsterAccountSchema = z.object({
+  apiKey: z.string().min(1),
+  apiSecret: z.string().min(1),
+  enabled: z.boolean().optional().default(true),
+  description: z.string().optional().default(""),
+  kind: z.array(AsterKindSchema).min(1).refine(arr => new Set(arr).size === arr.length, { message: "kind must be unique" }),
+});
+export type AsterAccount = z.infer<typeof AsterAccountSchema>;
+
+const AppIdentitySchema = z.object({
+  token: z.string().min(1),
+  projectId: z.string().min(1),
+  programId: z.string().min(1),
+});
+
+const AppRuntimeSchema = z.object({
+  version: z.string().regex(/^\d+\.\d+\.\d+$/),
+  env: z.enum(["development", "production"]).default("production"),
+  mode: z.enum(["POR", "DVC"]).default("POR"),
+  logVerbose: z.number().int().min(0).max(5).default(0),
+});
+
+const ZkvmServiceSchema = z.object({
+  url: z.url(),
+});
+
+const DataServiceSchema = z.object({
+  url: z.url(),
+});
+
+const AppServicesSchema = z.object({
+  zkvm: ZkvmServiceSchema,
+  data: DataServiceSchema,
+});
+
+const BlockchainSignerSchema = z.object({
+  privateKey: z.string(),
+});
+
+const BlockchainSchema = z.object({
+  network: z.enum(["base", "base-sepolia"]).default("base"),
+  rpcUrl: z.url().optional(),
+  signer: BlockchainSignerSchema.optional(),
+});
+
+const AppConfigSchema = z.object({
+  identity: AppIdentitySchema,
+  runtime: AppRuntimeSchema,
+  services: AppServicesSchema,
+  blockchain: BlockchainSchema,
+});
+
+const ExchangesConfigSchema = z.object({
+  binance: z.array(BinanceAccountSchema).optional(),
+  aster: z.array(AsterAccountSchema).optional(),
+}).refine(
+  (data) => (data.binance?.length ?? 0) > 0 || (data.aster?.length ?? 0) > 0,
+  {
+    message: "At least one exchange account of [binance,aster] must be configured",
+    path: ["exchanges"],
+  }
+);
+
+const ConfigSchema = z.object({
+  app: AppConfigSchema,
+  exchanges: ExchangesConfigSchema,
+}).refine(
+  (data) => {
+    if (data.app.runtime.mode === "DVC" && !data.app.blockchain.signer) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "signer is required when mode is DVC",
+    path: ["app", "blockchain", "signer"],
+  }
+);
+
+export type AppConfig = z.infer<typeof AppConfigSchema>;
+export type ExchangesConfig = z.infer<typeof ExchangesConfigSchema>;
+export type Config = z.infer<typeof ConfigSchema>;
+
+
+export function loadConfigFromFile(filePath: string): Config {
+  const absolutePath = path.resolve(filePath);
+  if (!fs.existsSync(absolutePath)) {
+    throw new Error(`Config file not found: ${absolutePath}`);
+  }
+
+  const raw = fs.readFileSync(absolutePath, "utf-8");
+  let parsed: unknown;
+  try {
+    parsed = yaml.load(raw);
+  } catch (err) {
+    throw new Error(`Failed to parse JSON config: ${(err as Error).message}`);
+  }
+
+  const config = ConfigSchema.parse(parsed);
+  return config;
+}
+
