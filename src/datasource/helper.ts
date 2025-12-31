@@ -1,4 +1,11 @@
 import { VERIFY_TYPE, RequestParams } from "../types.js";
+import { createHmac } from "node:crypto";
+
+export function signQuery(secretKey: string, params: any) {
+  const query = new URLSearchParams(params).toString();
+  const signature = createHmac("sha256", secretKey).update(query).digest("hex");
+  return `${query}&signature=${signature}`;
+}
 
 export function makeHashComparisonParams(origRequests: any[], verifyType: VERIFY_TYPE): RequestParams {
   if (!Array.isArray(origRequests)) {
