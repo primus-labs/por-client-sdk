@@ -2,10 +2,12 @@
 
 import { Command } from "commander";
 import { ProverClient } from "./client/prover_client.js";
+import { loadConfigFromFile } from "./config_schema.js";
 import fs from "fs";
 
 async function main() {
-  const api = new ProverClient();
+  const config = loadConfigFromFile();
+  const api = new ProverClient(config.app.services.zkvm.url);
   const program = new Command();
 
   program
@@ -28,7 +30,13 @@ async function main() {
     .action(async (opts) => {
       console.log("submitTask");
       const attestation_data = fs.readFileSync(opts.filepath, { encoding: "utf-8" });
-      const result = await api.submitTask(attestation_data);
+      const result = await api.submitTask({
+        token: config.app.identity.token,
+        projectId: config.app.identity.projectId,
+        programId: config.app.identity.programId,
+        attestationData: attestation_data,
+        zktlsMode: config.app.runtime.mode,
+      });
       console.log('Task submitted:', result);
     });
 
@@ -50,7 +58,13 @@ async function main() {
     .action(async (opts) => {
       console.log("submitTask and getResult.");
       const attestation_data = fs.readFileSync(opts.filepath, { encoding: "utf-8" });
-      const result = await api.doZkVM(attestation_data);
+      const result = await api.doZkVM({
+        token: config.app.identity.token,
+        projectId: config.app.identity.projectId,
+        programId: config.app.identity.programId,
+        attestationData: attestation_data,
+        zktlsMode: config.app.runtime.mode,
+      });
       console.log('result:', result);
     });
 
