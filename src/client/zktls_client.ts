@@ -191,12 +191,9 @@ export class ZkTLSClient {
     if (verifyType == 'HASH_COMPARISON') {
       // todo!
       return {
-        attestationData: {
-          verification_type: Array.from({ length: plainResponse.length }, () => "HASH_COMPARISON"),
-          public_data: attestResult,
-          private_data: plainResponse
-        },
-        requestid: taskId
+        verification_type: Array.from({ length: plainResponse.length }, () => "HASH_COMPARISON"),
+        public_data: attestResult,
+        private_data: plainResponse
       };
     } else {
       return {};
