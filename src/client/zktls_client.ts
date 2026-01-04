@@ -233,7 +233,7 @@ export class ZkTLSClient {
 
       await this._initializePrimusNetwork(opts, wallet, chainId);
 
-      const submitResult = await this._submitZkTLSTaskWithRetry(opts, attestParams);
+      const submitResult = await this._submitZkTLSTaskWithRetry(opts, attestParams, 4, 5000);
 
       const attestResult = await this._attestWithRetry(
         requestParams,
@@ -241,6 +241,7 @@ export class ZkTLSClient {
         attestParams,
         submitResult,
         requestParamsCallback,
+        4, 5000,
       );
 
       await this._verifyAndPollTaskResultWithRetry(attestResult);
