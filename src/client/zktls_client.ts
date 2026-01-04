@@ -210,9 +210,6 @@ export class ZkTLSClient {
    */
   private async _doZkTLS(requestParams: RequestParams, options: Options = {}, requestParamsCallback?: RequestParamsCallback): Promise<any> {
     const startTime = Date.now();
-    const attestParams = {
-      address: "0x9b7706746c6e19AD5EB5c1DaeEa4b4C09EEC8a5f" // TODO from private key
-    };
 
     const opts = getDefaultOptions(options);
     try {
@@ -228,6 +225,11 @@ export class ZkTLSClient {
       const privateKey = this.config.blockchain.signer?.privateKey;
       const wallet = privateKey ? new ethers.Wallet(privateKey, provider) : provider;
       const { chainId } = await provider.getNetwork();
+
+      const attestParams = { address: "" };
+      if (privateKey) {
+        attestParams.address = (wallet as ethers.Wallet).address;
+      }
 
       await this._initializePrimusNetwork(opts, wallet, chainId);
 
@@ -258,16 +260,15 @@ export class ZkTLSClient {
     }
   }
 
-  async doZkTLS(params: RequestParamsInput, options: Options = {}): Promise<Map<string, any>> {
-    const attestations = new Map<string, any>(); // key => attestation
+  async doZkTLS(params: RequestParamsInput, options: Options = {}): Promise<Record<string, any>> {
+    const attestations: Record<string, any> = {}; // key => attestation
 
     for (const [key, cb] of Object.entries(params)) {
       if (!cb) continue; // skip undefined cb
       const reqParams = cb();
       if (!reqParams) continue; // skip undefined requestParams
 
-      const data = await this._doZkTLS(reqParams, options, cb as RequestParamsCallback);
-      attestations.set(key, data);
+      attestations[key] = await this._doZkTLS(reqParams, options, cb as RequestParamsCallback);
     }
     return attestations;
   }
