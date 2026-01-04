@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=./config.schema.json
+
+app:
+  identity:
+    token: "-"
+    projectId: "-"
+    programId: "-"
+
+  runtime:
+    version: 0.1.0
+    env: production # development | production
+    mode: POR # POR | DVC
+    logVerbose: 0
+
+  services:
+    zkvm:
+      url: https://api-por.primuslabs.xyz:38080
+    data:
+      url: http://api-dev.padolabs.org:38101
+
+  blockchain:
+    network: base-sepolia # base, base-sepolia
+    rpcUrl: https://sepolia.base.org # optional
+    signer:
+      privateKey: "" # required if mode is DVC
+
+exchanges: # at least one of exchanges: [binance, aster]
+  binance:
+    - apiKey: "binance-key-123"
+      apiSecret: "binance-secret-abc"
+      kind: ["spot", "usds-futures"] # support spot, usds-futures, unified
+    - apiKey: "binance-key-456"
+      apiSecret: "binance-secret-def"
+      kind: ["spot", "unified"]
+      enabled: false # optional field, default true. disabled this key if false
+      description: "My Binance spot account" # optional
+  aster:
+    - apiKey: "aster-key-123"
+      apiSecret: "aster-secret-abc"
+      kind: ["spot", "usds-futures"] # support spot, usds-futures

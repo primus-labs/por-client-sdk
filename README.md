@@ -17,75 +17,109 @@ npm run build
 
 ## Getting Started
 
-1. Copy `.env.example` to `.env` and configure your environment variables (see [Configuration](#configuration)).
+1. Copy `.config.example.yml` to `.config.yml` and configure your environment variables (see [Configuration](#configuration)).
 
 2. Ensure required fields are set:
 
-   * `TOKEN` and `PROJECT_ID` for authentication
-   * `PROGRAM_ID` for program execution
+   * `app.identity.token` and `app.identity.projectId` for authentication
+   * `app.identity.programId` for program execution
 
 3. Run an example:
 
   ```bash
-  npx tsx example/okx.ts
+  npx tsx example/binance.ts
   ```
 
 
 ## Configuration
 
-The SDK allows flexible configuration from **three sources**, applied in **priority order (highest to lowest)**:
+### Structure Overview
 
-1. **Environment variables** (`.env` or `process.env`)
-2. **User-provided options** (passed to the `PoRClient` constructor)
-3. **Default values** defined in the SDK
+```yaml
+app:               # Core application configuration
+  identity:        # Application identity and authorization info
+  runtime:         # Runtime environment configuration
+  services:        # External service endpoints
+  blockchain:      # Blockchain connection and signer info
 
-> Higher-priority values overwrite lower-priority values.
-
-### Configuration Fields and Defaults
-
-| Env Variable       | SDK Field        | Type   | Required / Conditions | Default                                | Description                                                |
-| ------------------ | ---------------- | ------ | --------------------- | -------------------------------------- | ---------------------------------------------------------- |
-| `TOKEN`            | `token`          | string | Required              | `""`                                   | Authentication token assigned by Primus Labs.              |
-| `PROJECT_ID`       | `projectId`      | string | Required              | `""`                                   | Project identifier associated with your account.           |
-| `PROGRAM_ID`       | `programId`      | string | Required              | `""`                                   | Program identifier for zkVM execution.                     |
-| `LOG_VERBOSE`      | `logVerbose`     | number | Optional              | `0`                                    | Logging verbosity level (`0` = off; higher = more detail). |
-| `RPC_URL`          | `rpcUrl`         | string | Optional              | `https://mainnet.base.org`             | RPC endpoint for blockchain interactions.                  |
-
-
-### User-provided Configuration Example
-
-```ts
-import { PoRClient } from "@primuslabs/por-client-sdk";
-
-const client = new PoRClient({
-  token: "my-token",
-  projectId: "my-project",
-  programId: "my-program",
-  logVerbose: 2,
-});
+exchanges:         # Exchange account configurations
+  binance:         # Binance exchange accounts
+  aster:           # Aster exchange accounts
 ```
 
 
-## Using the SDK
+### Application Configuration (`app`)
 
-```ts
-import { DataSource, PoRClient } from "@primuslabs/por-client-sdk";
+#### 1. Identity (`app.identity`)
 
-async function main() {
-  const ds = new DataSource.Okx();
-  const requestParams = ds.getSampleRequests();
+Contains application authorization and identification.
 
-  const client = new PoRClient();
-  const result = await client.run(requestParams);
+| Field     | Type   | Description                                      | Example           |
+| --------- | ------ | ------------------------------------------------ | ----------------- |
+| token     | string | Authentication token issued for this application | `"my-auth-token"` |
+| projectId | string | Unique project identifier                        | `"project-123"`   |
+| programId | string | Unique program identifier                        | `"program-abc"`   |
 
-  console.log("Result:", JSON.stringify(result));
-}
+#### 2. Runtime (`app.runtime`)
 
-main();
-```
+Specifies the runtime environment and logging.
+
+| Field      | Type    | Default        | Description                                            | Example        |
+| ---------- | ------- | -------------- | ------------------------------------------------------ | -------------- |
+| version    | string  | -              | Application version in semantic version format (x.y.z) | `"1.0.0"`      |
+| env        | string  | `"production"` | Runtime environment (`development` or `production`)    | `"production"` |
+| mode       | string  | `"POR"`        | Application execution mode (`POR` or `DVC`)            | `"POR"`        |
+| logVerbose | integer | `0`            | Log verbosity (0 = off, higher = more detail)          | `3`            |
+
+#### 3. Services (`app.services`)
+
+External service endpoints used by the application.
+
+##### zkVM Service (`app.services.zkvm`)
+
+| Field | Type   | Description               | Example                      |
+| ----- | ------ | ------------------------- | ---------------------------- |
+| url   | string | zkVM service endpoint URL | `"https://zkvm.example.com"` |
+
+##### Data Service (`app.services.data`)
+
+| Field | Type   | Description               | Example                      |
+| ----- | ------ | ------------------------- | ---------------------------- |
+| url   | string | Data service endpoint URL | `"https://data.example.com"` |
+
+#### 4. Blockchain (`app.blockchain`)
+
+Blockchain connection and signer configuration.
+
+| Field   | Type   | Default  | Description                                                              | Example                     |
+| ------- | ------ | -------- | ------------------------------------------------------------------------ | --------------------------- |
+| network | string | `"base"` | Target blockchain network (`base` or `base-sepolia`)                     | `"base-sepolia"`            |
+| rpcUrl  | string | -        | Optional custom RPC URL. If not set, default RPC for the network is used | `"https://rpc.example.com"` |
+| signer  | object | -        | Transaction signer info (required if `mode` is `DVC`)                    | -                           |
+
+##### Signer (`app.blockchain.signer`)
+
+| Field      | Type   | Description                                 | Example            |
+| ---------- | ------ | ------------------------------------------- | ------------------ |
+| privateKey | string | Private key to sign blockchain transactions | `"0xabcdef123..."` |
+
+---
+
+### Exchange Accounts (`exchanges`)
+
+Supports multiple exchange accounts. At least one exchange is required. Now only support Binance and Aster.
+
+#### Fields of `exchange`
+
+| Field       | Type    | Description                                    | Example                     |
+| ----------- | ------- | ---------------------------------------------- | --------------------------- |
+| apiKey      | string  | API key used to authenticate with Binance      | `"binance-key-123"`         |
+| apiSecret   | string  | API secret corresponding to the API key        | `"binance-secret-abc"`      |
+| enabled     | boolean | Whether this account is active (default: true) | `true`                      |
+| description | string  | Optional description for this account          | `"My Binance spot account"` |
+| kind        | array   | Supported Binance account types                | `["spot","usds-futures"]`   |
 
 
 ## Data Sources
 
 > TODO: Document supported data sources and sample requests.
-
