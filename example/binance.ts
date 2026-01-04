@@ -10,13 +10,11 @@ async function main() {
     const client = new PoRClient(config.app);
     console.log("client:", JSON.stringify(client));
 
-    if (ds.binance?.hasSpot) {
-      const requestParams = ds.binance?.getSpotAccountInfoRequests();
-      const result = await client.run(requestParams);
-      console.log("result", JSON.stringify(result));
-      console.log('proof fixture(json):', JSON.parse(result?.proof_fixture ?? "{}"));
-    }
-
+    const result = await client.run({
+      binanceSpot: () => ds.binance?.getSpotAccountInfoRequests()
+    });
+    console.log("result", JSON.stringify(result));
+    console.log('proof fixture(json):', JSON.parse(result?.proof_fixture ?? "{}"));
   } catch (err: any) {
     console.log("err:", err?.message, JSON.stringify(err));
   }

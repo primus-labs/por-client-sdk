@@ -5,7 +5,8 @@ export type RequestParams = {
   requests: AttNetworkRequest[];
   responseResolves: AttNetworkResponseResolve[][];
 };
-export type RequestParamsInput = RequestParams | RequestParams[];
+export type RequestParamsOutput = RequestParams | undefined;
+export type RequestParamsInput = Record<string, () => RequestParamsOutput>;
 export type RequestParamsCallback = () => RequestParams;
 
 export interface Options {
@@ -14,7 +15,7 @@ export interface Options {
   specialTask?: any;
   noProxy?: boolean;
   runZkvm?: boolean;
-  requestParamsCallback?: RequestParamsCallback | RequestParamsCallback[];
+  saveAtt?: boolean;
 }
 
 export function getDefaultOptions(options: Options): Options {
@@ -24,7 +25,7 @@ export function getDefaultOptions(options: Options): Options {
     specialTask: undefined,
     noProxy: true,
     runZkvm: true,
-    requestParamsCallback: undefined,
+    saveAtt: true,
   };
   return { ...defaults, ...options };
 }

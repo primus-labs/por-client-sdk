@@ -1,6 +1,6 @@
 import ccxt from "ccxt";
 import { makeHashComparisonParams } from "./helper.js";
-import { VERIFY_TYPE, RequestParams } from "../types.js";
+import { VERIFY_TYPE, RequestParamsOutput } from "../types.js";
 import { BinanceKind, BinanceAccount, ExchangesConfig } from "../config_schema.js";
 import { BaseExchange } from "./base_exchange.js";
 
@@ -29,7 +29,9 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
 
   /// doc: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints#account-information-user_data
   /// api: https://api.binance.com/api/v3/account
-  public getSpotAccountInfoRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
+  public getSpotAccountInfoRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasSpot) return undefined;
+
     const signParams = { recvWindow: this.recvWindow };
     const origRequests: any[] = [];
     for (const acc of this.spotAccounts) {
@@ -41,7 +43,9 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
 
   /// doc: https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3
   /// api: https://fapi.binance.com/fapi/v3/balance
-  public getUsdSFutureAccountBalanceV3Requests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
+  public getUsdSFutureAccountBalanceV3Requests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasUsdSFutures) return undefined;
+
     const signParams = { recvWindow: this.recvWindow };
     const origRequests: any[] = [];
     for (const acc of this.usdSFuturesAccounts) {
@@ -53,7 +57,9 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
 
   /// doc: https://developers.binance.com/docs/derivatives/portfolio-margin/account
   /// api: https://papi.binance.com/papi/v1/balance
-  public getUnifiedAccountBalanceRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
+  public getUnifiedAccountBalanceRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasUnified) return undefined;
+
     const signParams = { recvWindow: this.recvWindow };
     const origRequests: any[] = [];
     for (const acc of this.unifiedAccounts) {

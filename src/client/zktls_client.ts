@@ -1,7 +1,7 @@
 import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { ethers } from "ethers";
 import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
-import { Options, getDefaultOptions, RequestParams, RequestParamsInput, VERIFY_TYPE, RequestParamsCallback } from "../types.js";
+import { Options, getDefaultOptions, RequestParams, VERIFY_TYPE, RequestParamsInput, RequestParamsCallback } from "../types.js";
 import { ClientError } from "../error.js";
 import { DataServiceClient } from "./data_service_client.js";
 import { v4 as uuidv4 } from 'uuid';
@@ -257,20 +257,17 @@ export class ZkTLSClient {
       throw err;
     }
   }
-  async doZkTLS(params: RequestParamsInput, options: Options = {}): Promise<any> {
-    const requestParams = Array.isArray(params) ? params : [params];
-    const callbacks: (RequestParamsCallback | undefined)[] = options.requestParamsCallback
-      ? Array.isArray(options.requestParamsCallback) ? options.requestParamsCallback : [options.requestParamsCallback]
-      : [];
 
-    if (callbacks.length > 0 && callbacks.length !== requestParams.length) {
-      throw new ClientError("71008", `Request params size ${requestParams.length} != callbacks size ${callbacks.length}`);
-    }
+  async doZkTLS(params: RequestParamsInput, options: Options = {}): Promise<Map<string, any>> {
+    const attestations = new Map<string, any>(); // key => attestation
 
-    let attestations: any[] = [];
-    for (let i = 0; i < requestParams.length; i++) {
-      const data = await this._doZkTLS(requestParams[i], options, callbacks[i]);
-      attestations.push(data.attestationData);
+    for (const [key, cb] of Object.entries(params)) {
+      if (!cb) continue; // skip undefined cb
+      const reqParams = cb();
+      if (!reqParams) continue; // skip undefined requestParams
+
+      const data = await this._doZkTLS(reqParams, options, cb as RequestParamsCallback);
+      attestations.set(key, data);
     }
     return attestations;
   }

@@ -1,5 +1,5 @@
 import { makeHashComparisonParams, signQuery } from "./helper.js";
-import { VERIFY_TYPE, RequestParams } from "../types.js";
+import { VERIFY_TYPE, RequestParamsOutput } from "../types.js";
 import { AsterKind, AsterAccount, ExchangesConfig } from "../config_schema.js";
 import { BaseExchange } from "./base_exchange.js";
 
@@ -44,15 +44,19 @@ export class Aster extends BaseExchange<AsterAccount, AsterKind> {
 
   /// doc: https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#account-information-user_data
   /// api: https://sapi.asterdex.com/api/v1/account
-  public getSpotAccountRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
+  public getSpotAccountRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasSpot) return undefined;
+
     const url = "https://sapi.asterdex.com/api/v1/account";
     const origRequests = makerAsterOrigRequests(url, this.spotAccounts);
     return makeHashComparisonParams(origRequests, verifyType);
   }
-  
+
   /// doc: https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#futures-account-balance-v2-user_data
   /// api: https://fapi.asterdex.com/fapi/v2/balance
-  public getUsdSFutureBalanceRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
+  public getUsdSFutureBalanceRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasUsdSFutures) return undefined;
+
     const url = "https://fapi.asterdex.com/fapi/v2/balance";
     const origRequests = makerAsterOrigRequests(url, this.usdSFuturesAccounts);
     return makeHashComparisonParams(origRequests, verifyType);
