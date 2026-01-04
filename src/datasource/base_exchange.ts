@@ -3,7 +3,7 @@ export abstract class BaseExchange<
   K extends string,
 > {
   protected readonly accounts: readonly T[];
-  protected readonly recvWindow: number = 60;
+  protected readonly recvWindow: number = 60 * 1000;
 
   constructor(accounts?: readonly T[]) {
     this.accounts = (accounts ?? []).filter(acc => acc.enabled ?? true); // only enabled account
