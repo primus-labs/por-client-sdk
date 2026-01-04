@@ -266,6 +266,7 @@ export class ZkTLSClient {
       const reqParams = cb();
       if (!reqParams) continue; // skip undefined requestParams
 
+      console.log(`Run ${key}`)
       attestations[key] = await this._doZkTLS(reqParams, options, cb as RequestParamsCallback);
     }
     return attestations;
