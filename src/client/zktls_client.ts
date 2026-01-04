@@ -2,18 +2,18 @@ import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { ethers } from "ethers";
 import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
 import { Options, getDefaultOptions, RequestParams, RequestParamsInput, VERIFY_TYPE, RequestParamsCallback } from "../types.js";
-import { SdkConfig, resolveSdkConfig } from "../config.js";
 import { ClientError } from "../error.js";
 import { DataServiceClient } from "./data_service_client.js";
 import { v4 as uuidv4 } from 'uuid';
+import { AppConfig } from "../config_schema.js";
 
 
 export class ZkTLSClient {
-  private readonly config: Required<SdkConfig>;
+  private readonly config: Required<AppConfig>;
   private primusNetwork: PrimusNetwork;
 
-  constructor(config: SdkConfig = {}) {
-    this.config = resolveSdkConfig(config);
+  constructor(config: AppConfig) {
+    this.config = { ...config };
     this.primusNetwork = new PrimusNetwork();
   }
 
@@ -47,13 +47,13 @@ export class ZkTLSClient {
     while (true) {
       try {
         let result;
-        if (this.config.zktlsMode === "DVC") {
+        if (this.config.runtime.mode === "DVC") {
           result = await this.primusNetwork.submitTask(attestParams);
-        } else if (this.config.zktlsMode === "POR") {
-          const client = new DataServiceClient(this.config.dataServiceUrl);
+        } else if (this.config.runtime.mode === "POR") {
+          const client = new DataServiceClient(this.config.services.data.url);
           const bizId = uuidv4();
-          const token = this.config.token;
-          const projectId = this.config.projectId;
+          const token = this.config.identity.token;
+          const projectId = this.config.identity.projectId;
           const { taskId, taskTxHash, taskAttestors, submitterAddress } = await client.submitTask(bizId, projectId, token);
           result = { taskId, taskTxHash, taskAttestors };
           attestParams.address = submitterAddress;
@@ -211,13 +211,22 @@ export class ZkTLSClient {
   private async _doZkTLS(requestParams: RequestParams, options: Options = {}, requestParamsCallback?: RequestParamsCallback): Promise<any> {
     const startTime = Date.now();
     const attestParams = {
-      address: "0x9b7706746c6e19AD5EB5c1DaeEa4b4C09EEC8a5f"
+      address: "0x9b7706746c6e19AD5EB5c1DaeEa4b4C09EEC8a5f" // TODO from private key
     };
 
     const opts = getDefaultOptions(options);
     try {
-      const provider = new ethers.providers.JsonRpcProvider(this.config.rpcUrl);
-      const wallet = this.config.privateKey ? new ethers.Wallet(this.config.privateKey, provider) : provider;
+      let rpcUrl = this.config.blockchain.rpcUrl;
+      if (!rpcUrl) {
+        // TODO: using mapping
+        const network = this.config.blockchain.network;
+        if (network === "base") { rpcUrl = "https://mainnet.base.org"; }
+        else if (network === "base-sepolia") { rpcUrl = "https://sepolia.base.org"; }
+      }
+
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      const privateKey = this.config.blockchain.signer?.privateKey;
+      const wallet = privateKey ? new ethers.Wallet(privateKey, provider) : provider;
       const { chainId } = await provider.getNetwork();
 
       await this._initializePrimusNetwork(opts, wallet, chainId);

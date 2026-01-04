@@ -1,17 +1,23 @@
 import axios, { AxiosInstance } from "axios";
 import FormData from "form-data";
 import fs from "fs";
-import { SdkConfig, resolveSdkConfig } from "../config.js";
 import { ClientError } from "../error.js";
 import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
 
+
+interface SubmitTaskInput {
+  token: string;
+  projectId: string;
+  programId: string;
+  attestationData: string;
+  zktlsMode: string;
+}
+
 export class ProverClient {
-  private readonly config: Required<SdkConfig>;
   private client: AxiosInstance;
 
-  constructor(config: SdkConfig = {}, timeout = 30_000) {
-    this.config = resolveSdkConfig(config);
-    this.client = axios.create({ baseURL: this.config.zkvmServiceUrl, timeout });
+  constructor(url: string, timeout = 30_000) {
+    this.client = axios.create({ baseURL: url, timeout });
   }
 
   async uploadProgram(
@@ -35,13 +41,13 @@ export class ProverClient {
     return this.unwrap("uploadProgram", res.data);
   }
 
-  async submitTask(attestationData: string): Promise<any> {
+  async submitTask(input: SubmitTaskInput): Promise<any> {
     const form = new FormData();
-    form.append("zktls_mode", this.config.zktlsMode);
-    form.append("token", this.config.token);
-    form.append("project_id", this.config.projectId);
-    form.append("program_id", this.config.programId);
-    form.append("attestation_data", attestationData);
+    form.append("token", input.token);
+    form.append("project_id", input.projectId);
+    form.append("program_id", input.programId);
+    form.append("attestation_data", input.attestationData);
+    form.append("zktls_mode", input.zktlsMode);
 
     const res = await this.client.post("/submitTask", form, {
       headers: form.getHeaders()
@@ -68,14 +74,14 @@ export class ProverClient {
   }
 
 
-  async submitTaskWithRetry(attestationData: string, maxRetries = 4, baseDelay = 1000): Promise<any> {
+  async submitTaskWithRetry(input: SubmitTaskInput, maxRetries = 4, baseDelay = 1000): Promise<any> {
     let attempt = 0;
     const start = Date.now();
     console.log("Submitting task...");
 
     while (true) {
       try {
-        const result = await this.submitTask(attestationData);
+        const result = await this.submitTask(input);
         console.log(`Submitting task done (${Date.now() - start}ms):`, result);
         return result;
       } catch (err: any) {
@@ -125,9 +131,9 @@ export class ProverClient {
     }
   }
 
-  private async _doZkVM(attestationData: string): Promise<any> {
+  private async _doZkVM(input: SubmitTaskInput): Promise<any> {
     try {
-      const submitResult = await this.submitTaskWithRetry(attestationData);
+      const submitResult = await this.submitTaskWithRetry(input);
       const result = await this.getResultWithTimeout(submitResult.task_id);
       return result;
     } catch (err: any) {
@@ -140,7 +146,7 @@ export class ProverClient {
     }
   }
 
-  async doZkVM(attestationData: string): Promise<any> {
-    return await this._doZkVM(attestationData);
+  async doZkVM(input: SubmitTaskInput): Promise<any> {
+    return await this._doZkVM(input);
   }
 }

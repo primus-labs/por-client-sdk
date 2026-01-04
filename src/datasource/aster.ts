@@ -1,21 +1,22 @@
 import { makeHashComparisonParams, signQuery } from "./helper.js";
 import { VERIFY_TYPE, RequestParams } from "../types.js";
-import { GeneralAccount } from "./account.js";
+import { AsterKind, AsterAccount, ExchangesConfig } from "../config_schema.js";
+import { BaseExchange } from "./base_exchange.js";
 
 
 // TODO: make as utility
-function makerAsterOrigRequests(url: string, accounts: any[], params = {}) {
+function makerAsterOrigRequests(url: string, accounts: AsterAccount[], params = {}) {
   const recvWindow = 60; // Number(process.env.RECV_WINDOW) || 60;
   let signParams = { ...params, recvWindow: recvWindow * 1000 };
 
   let origRequests = []
   for (const acc of accounts) {
     const timestamp = Date.now();
-    const query = signQuery(acc.secret, { ...signParams, timestamp });
+    const query = signQuery(acc.apiSecret, { ...signParams, timestamp });
 
     const origRequest = {
       url: `${url}?${query}`,
-      headers: { "X-MBX-APIKEY": acc.key }
+      headers: { "X-MBX-APIKEY": acc.apiKey }
     };
 
     origRequests.push(origRequest);
@@ -24,22 +25,36 @@ function makerAsterOrigRequests(url: string, accounts: any[], params = {}) {
   return origRequests;
 }
 
-export class Aster {
-  constructor() {
+
+export class Aster extends BaseExchange<AsterAccount, AsterKind> {
+  constructor(accounts?: ExchangesConfig["aster"]) {
+    super(accounts);
   }
+  get hasSpot() { return this.spotAccounts.length > 0; }
+  get hasUsdSFutures() { return this.usdSFuturesAccounts.length > 0; }
+  get spotAccounts() { return this.getAccounts("spot"); }
+  get usdSFuturesAccounts() { return this.getAccounts("usds-futures"); }
+
+  ///
+  /// =======================================================================
+  ///
+
+  /// TODO: more general interfaces
+  ///       a map for any api
 
   /// doc: https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#account-information-user_data
   /// api: https://sapi.asterdex.com/api/v1/account
-  public getSpotAccountRequests(accounts: GeneralAccount[], verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
+  public getSpotAccountRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
     const url = "https://sapi.asterdex.com/api/v1/account";
-    const origRequests = makerAsterOrigRequests(url, accounts);
+    const origRequests = makerAsterOrigRequests(url, this.spotAccounts);
     return makeHashComparisonParams(origRequests, verifyType);
   }
+  
   /// doc: https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#futures-account-balance-v2-user_data
   /// api: https://fapi.asterdex.com/fapi/v2/balance
-  public getFutureBalanceRequests(accounts: GeneralAccount[], verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
+  public getUsdSFutureBalanceRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
     const url = "https://fapi.asterdex.com/fapi/v2/balance";
-    const origRequests = makerAsterOrigRequests(url, accounts);
+    const origRequests = makerAsterOrigRequests(url, this.usdSFuturesAccounts);
     return makeHashComparisonParams(origRequests, verifyType);
   }
 }

@@ -10,22 +10,21 @@ const AsterKindSchema = z.enum(["spot", "usds-futures"]);
 export type AsterKind = z.infer<typeof AsterKindSchema>;
 export type BinanceKind = z.infer<typeof BinanceKindSchema>;
 
-const BinanceAccountSchema = z.object({
+const BaseAccountSchema = z.object({
   apiKey: z.string().min(1),
   apiSecret: z.string().min(1),
   enabled: z.boolean().optional().default(true),
   description: z.string().optional().default(""),
-  kind: z.array(BinanceKindSchema).min(1).refine(arr => new Set(arr).size === arr.length, { message: "kind must be unique" }),
 });
+const AccountSchema = <K extends z.ZodTypeAny>(kind: K) =>
+  BaseAccountSchema.extend({
+    kind: z.array(kind).min(1).refine(arr => new Set(arr).size === arr.length, { message: "kind must be unique" }),
+  });
+
+export const BinanceAccountSchema = AccountSchema(BinanceKindSchema);
 export type BinanceAccount = z.infer<typeof BinanceAccountSchema>;
 
-const AsterAccountSchema = z.object({
-  apiKey: z.string().min(1),
-  apiSecret: z.string().min(1),
-  enabled: z.boolean().optional().default(true),
-  description: z.string().optional().default(""),
-  kind: z.array(AsterKindSchema).min(1).refine(arr => new Set(arr).size === arr.length, { message: "kind must be unique" }),
-});
+export const AsterAccountSchema = AccountSchema(AsterKindSchema);
 export type AsterAccount = z.infer<typeof AsterAccountSchema>;
 
 const AppIdentitySchema = z.object({
@@ -74,7 +73,7 @@ const AppConfigSchema = z.object({
 const ExchangesConfigSchema = z.object({
   binance: z.array(BinanceAccountSchema).optional(),
   aster: z.array(AsterAccountSchema).optional(),
-}).refine(
+}).strict().refine(
   (data) => (data.binance?.length ?? 0) > 0 || (data.aster?.length ?? 0) > 0,
   {
     message: "At least one exchange account of [binance,aster] must be configured",
@@ -103,7 +102,7 @@ export type ExchangesConfig = z.infer<typeof ExchangesConfigSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 
 
-export function loadConfigFromFile(filePath: string): Config {
+export function loadConfigFromFile(filePath: string = ".config.yml"): Config {
   const absolutePath = path.resolve(filePath);
   if (!fs.existsSync(absolutePath)) {
     throw new Error(`Config file not found: ${absolutePath}`);
