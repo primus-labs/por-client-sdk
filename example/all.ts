@@ -1,4 +1,4 @@
-import { DataSource, PoRClient, loadConfigFromFile } from "../src";
+import { Scheduler, DataSource, PoRClient, loadConfigFromFile } from "../src";
 
 async function main() {
   try {
@@ -15,11 +15,19 @@ async function main() {
 
     const client = new PoRClient(config.app);
     const result = await client.run(params);
-    console.log("result", JSON.stringify(result));
+    // console.log("result", JSON.stringify(result));
     console.log('proof fixture(json):', JSON.parse(result?.proof_fixture ?? "{}"));
   } catch (err: any) {
     console.log("err:", err?.message, JSON.stringify(err));
+    throw err;
   }
 }
 
-main()
+const scheduler = new Scheduler(main, {
+  intervalMs: 30 * 60 * 1000, // ms
+  shouldStop: (err) => {
+    if (err?.data?.code === "timeout") return true;
+    return false;
+  }
+});
+scheduler.start();
