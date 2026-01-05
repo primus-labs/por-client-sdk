@@ -10,6 +10,8 @@ interface SchedulerOptions {
 
 export class Scheduler {
   private stopped = false;
+  private lastSigintTime = 0;
+  private sigintCount = 0;
 
   constructor(
     private job: JobFn,
@@ -23,10 +25,22 @@ export class Scheduler {
 
   stop(signal?: string) {
     if (signal) {
-      console.log(`🛑 Scheduler stop requested by ${signal}`);
+      if (signal !== "SIGINT") {
+        console.log(`🛑 Received ${signal}.`);
+      }
     } else {
-      console.log("🛑 Scheduler stop requested");
+      console.log("🛑 Stop requested.");
     }
+
+    const now = Date.now();
+    if (signal === "SIGINT") {
+      if (now - this.lastSigintTime <= 2000) { this.sigintCount++; }
+      else { this.sigintCount = 1; }
+      this.lastSigintTime = now;
+      if (this.sigintCount >= 2) { process.exit(1); }
+      else { console.log(`🛑 Received ${signal}. (Press twice Ctrl + C to exit)`); }
+    }
+
     this.stopped = true;
   }
 

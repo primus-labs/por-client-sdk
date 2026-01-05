@@ -102,6 +102,31 @@ export type ExchangesConfig = z.infer<typeof ExchangesConfigSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 
 
+function mask(value: string | undefined): string {
+  if (!value) return "";
+  const len = value.length;
+  if (len <= 8) return "*".repeat(len);
+  return value.slice(0, 4) + "*".repeat(3) + value.slice(-4);
+}
+
+const SENSITIVE_KEYS = ["token", "privateKey", "apiKey", "apiSecret"];
+function maskConfig(obj: any): any {
+  if (Array.isArray(obj)) return obj.map(maskConfig);
+  if (obj && typeof obj === "object") {
+    const res: any = {};
+    for (const key in obj) {
+      if (SENSITIVE_KEYS.includes(key)) {
+        res[key] = mask(obj[key]);
+      } else {
+        res[key] = maskConfig(obj[key]);
+      }
+    }
+    return res;
+  }
+  return obj;
+}
+
+
 export function loadConfigFromFile(filePath: string = ".config.yml"): Config {
   const absolutePath = path.resolve(filePath);
   if (!fs.existsSync(absolutePath)) {
@@ -117,6 +142,7 @@ export function loadConfigFromFile(filePath: string = ".config.yml"): Config {
   }
 
   const config = ConfigSchema.parse(parsed);
+  console.log(JSON.stringify(maskConfig(config), null, 2));
   return config;
 }
 
