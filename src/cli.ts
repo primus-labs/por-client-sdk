@@ -35,7 +35,6 @@ async function main() {
         projectId: config.app.identity.projectId,
         programId: config.app.identity.programId,
         attestationData: attestation_data,
-        zktlsMode: config.app.runtime.mode,
       });
       console.log('Task submitted:', result);
     });
@@ -63,7 +62,6 @@ async function main() {
         projectId: config.app.identity.projectId,
         programId: config.app.identity.programId,
         attestationData: attestation_data,
-        zktlsMode: config.app.runtime.mode,
       });
       console.log('result:', result);
     });

@@ -9,7 +9,6 @@ app:
   runtime:
     version: 0.1.0
     env: production # development | production
-    mode: POR # POR | DVC
     logVerbose: 0
 
   services:
@@ -22,7 +21,7 @@ app:
     network: base-sepolia # base, base-sepolia
     rpcUrl: https://sepolia.base.org # optional
     signer:
-      privateKey: "" # required if mode is DVC
+      privateKey: "" # required if `subscriptionType` is `PLAN_SELF_PAID`
 
 exchanges: # at least one of exchanges: [binance, aster]
   binance:

@@ -35,8 +35,7 @@ export class PoRClient {
         token: this.config.identity.token,
         projectId: this.config.identity.projectId,
         programId: this.config.identity.programId,
-        attestationData: JSON.stringify(attestationData),
-        zktlsMode: this.config.runtime.mode,
+        attestationData: JSON.stringify(attestationData)
       });
       console.log("result", result);
       return result;

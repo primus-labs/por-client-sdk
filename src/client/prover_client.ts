@@ -10,7 +10,6 @@ interface SubmitTaskInput {
   projectId: string;
   programId: string;
   attestationData: string;
-  zktlsMode: string;
 }
 
 export class ProverClient {
@@ -47,7 +46,6 @@ export class ProverClient {
     form.append("project_id", input.projectId);
     form.append("program_id", input.programId);
     form.append("attestation_data", input.attestationData);
-    form.append("zktls_mode", input.zktlsMode);
 
     const res = await this.client.post("/submitTask", form, {
       headers: form.getHeaders()

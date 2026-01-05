@@ -36,7 +36,6 @@ const AppIdentitySchema = z.object({
 const AppRuntimeSchema = z.object({
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
   env: z.enum(["development", "production"]).default("production"),
-  mode: z.enum(["POR", "DVC"]).default("POR"),
   logVerbose: z.number().int().min(0).max(5).default(0),
 });
 
@@ -84,18 +83,7 @@ const ExchangesConfigSchema = z.object({
 const ConfigSchema = z.object({
   app: AppConfigSchema,
   exchanges: ExchangesConfigSchema,
-}).refine(
-  (data) => {
-    if (data.app.runtime.mode === "DVC" && !data.app.blockchain.signer) {
-      return false;
-    }
-    return true;
-  },
-  {
-    message: "signer is required when mode is DVC",
-    path: ["app", "blockchain", "signer"],
-  }
-);
+}).strict();
 
 export type AppConfig = z.infer<typeof AppConfigSchema>;
 export type ExchangesConfig = z.infer<typeof ExchangesConfigSchema>;

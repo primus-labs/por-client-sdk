@@ -96,7 +96,6 @@
           "required": [
             "version",
             "env",
-            "mode",
             "logVerbose"
           ],
           "properties": {
@@ -113,15 +112,6 @@
               ],
               "default": "production",
               "description": "Runtime environment"
-            },
-            "mode": {
-              "type": "string",
-              "enum": [
-                "POR",
-                "DVC"
-              ],
-              "default": "POR",
-              "description": "Application execution mode"
             },
             "logVerbose": {
               "type": "integer",
@@ -204,7 +194,7 @@
             },
             "signer": {
               "type": "object",
-              "description": "Transaction signer configuration (required if mode is app.runtime.DVC)",
+              "description": "Transaction signer configuration (required if subscriptionType is PLAN_SELF_PAID)",
               "additionalProperties": false,
               "required": [
                 "privateKey"

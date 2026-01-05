@@ -24,7 +24,7 @@ npm run build
    * `app.identity.token` and `app.identity.projectId` for authentication
    * `app.identity.programId` for program execution
 
-3. Run an example:
+3. Run an example: (Need configure your Binance API Key first)
 
   ```bash
   npx tsx example/binance.ts
@@ -68,7 +68,6 @@ Specifies the runtime environment and logging.
 | ---------- | ------- | -------------- | ------------------------------------------------------ | -------------- |
 | version    | string  | -              | Application version in semantic version format (x.y.z) | `"1.0.0"`      |
 | env        | string  | `"production"` | Runtime environment (`development` or `production`)    | `"production"` |
-| mode       | string  | `"POR"`        | Application execution mode (`POR` or `DVC`)            | `"POR"`        |
 | logVerbose | integer | `0`            | Log verbosity (0 = off, higher = more detail)          | `3`            |
 
 #### 3. Services (`app.services`)
@@ -91,11 +90,11 @@ External service endpoints used by the application.
 
 Blockchain connection and signer configuration.
 
-| Field   | Type   | Default  | Description                                                              | Example                     |
-| ------- | ------ | -------- | ------------------------------------------------------------------------ | --------------------------- |
-| network | string | `"base"` | Target blockchain network (`base` or `base-sepolia`)                     | `"base-sepolia"`            |
-| rpcUrl  | string | -        | Optional custom RPC URL. If not set, default RPC for the network is used | `"https://rpc.example.com"` |
-| signer  | object | -        | Transaction signer info (required if `mode` is `DVC`)                    | -                           |
+| Field   | Type   | Default  | Description                                                                  | Example                     |
+| ------- | ------ | -------- | ---------------------------------------------------------------------------- | --------------------------- |
+| network | string | `"base"` | Target blockchain network (`base` or `base-sepolia`)                         | `"base-sepolia"`            |
+| rpcUrl  | string | -        | Optional custom RPC URL. If not set, default RPC for the network is used     | `"https://rpc.example.com"` |
+| signer  | object | -        | Transaction signer info (required if `subscriptionType` is `PLAN_SELF_PAID`) | -                           |
 
 ##### Signer (`app.blockchain.signer`)
 
