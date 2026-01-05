@@ -8,13 +8,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { AppConfig } from "../config_schema.js";
 
 
+type PLAN_TYPE = 'SELF' | 'SUBSCRIPTION' | 'UNKNOWN';
 export class ZkTLSClient {
   private readonly config: Required<AppConfig>;
   private primusNetwork: PrimusNetwork;
+  private planType: PLAN_TYPE;
 
   constructor(config: AppConfig) {
     this.config = { ...config };
     this.primusNetwork = new PrimusNetwork();
+    this.planType = 'UNKNOWN';
   }
 
 
@@ -46,10 +49,22 @@ export class ZkTLSClient {
 
     while (true) {
       try {
+        if (this.planType === 'UNKNOWN') {
+          const client = new DataServiceClient(this.config.services.data.url);
+          const bizId = uuidv4();
+          const token = this.config.identity.token;
+          const projectId = this.config.identity.projectId;
+          const { subscriptionType } = await client.checkPayment(bizId, projectId, token);
+          console.log(`SubscriptionType: ${subscriptionType}`);
+          this.planType = 'SUBSCRIPTION';
+          if (subscriptionType === "PLAN_SELF_PAID") {
+            this.planType = 'SELF';
+          }
+        }
         let result;
-        if (this.config.runtime.mode === "DVC") {
+        if (this.planType === 'SELF') {
           result = await this.primusNetwork.submitTask(attestParams);
-        } else if (this.config.runtime.mode === "POR") {
+        } else if (this.planType === 'SUBSCRIPTION') {
           const client = new DataServiceClient(this.config.services.data.url);
           const bizId = uuidv4();
           const token = this.config.identity.token;

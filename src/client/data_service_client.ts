@@ -15,6 +15,11 @@ export interface SubmitTaskResult {
   submitterAddress: string,
 }
 
+export interface CheckPaymentResult {
+  projectId: string;
+  subscriptionType: string;
+}
+
 export class DataServiceClient {
   private readonly client: AxiosInstance;
   constructor(baseURL: string, timeout: number = 30_000) {
@@ -49,8 +54,8 @@ export class DataServiceClient {
     bizId: string,
     projectId: string,
     token: string,
-  ): Promise<void> {
-    const res = await this.client.get<ApiResponse<null>>(
+  ): Promise<CheckPaymentResult> {
+    const res = await this.client.get<ApiResponse<CheckPaymentResult>>(
       "/public/program/payment/check",
       {
         params: { bizId, projectId },
@@ -60,7 +65,11 @@ export class DataServiceClient {
       }
     );
 
-    this.unwrap('checkPayment', res.data);
+    const raw = this.unwrap('checkPayment', res.data);
+    return {
+      projectId: raw.projectId,
+      subscriptionType: raw.subscriptionType,
+    };
   }
 
 
