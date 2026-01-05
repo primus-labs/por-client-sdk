@@ -59,6 +59,14 @@ export class ZkTLSClient {
           this.planType = 'SUBSCRIPTION';
           if (subscriptionType === "PLAN_SELF_PAID") {
             this.planType = 'SELF';
+            if (!this.config.blockchain.signer?.privateKey) {
+              throw new ClientError("71008", "Please set your private key at `app.blockchain.signer.privateKey`");
+            }
+            // TODO: withdraw
+            // try {
+            //   await this.primusNetwork.withdrawBalance();
+            // } catch (error) {
+            // }
           }
         }
         let result;
@@ -76,7 +84,7 @@ export class ZkTLSClient {
         console.log(`✅ submitTask done (${Date.now() - start}ms):`, result);
         return result;
       } catch (err: any) {
-        const NO_RETRY_CODES = ["72001"]; // from data service client
+        const NO_RETRY_CODES = ["72001", "71008"]; // from data service client
         if (err instanceof ClientError && NO_RETRY_CODES.includes(err.code)) throw err;
 
         attempt++;
