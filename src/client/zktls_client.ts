@@ -1,4 +1,5 @@
 import { PrimusNetwork } from "@primuslabs/network-core-sdk";
+import { TokenSymbol } from "@primuslabs/network-core-sdk/dist/types";
 import { ethers } from "ethers";
 import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
 import { Options, getDefaultOptions, RequestParams, VERIFY_TYPE, RequestParamsInput, RequestParamsCallback } from "../types.js";
@@ -62,11 +63,6 @@ export class ZkTLSClient {
             if (!this.config.blockchain.signer?.privateKey) {
               throw new ClientError("71008", "Please set your private key at `app.blockchain.signer.privateKey`");
             }
-            // TODO: withdraw
-            // try {
-            //   await this.primusNetwork.withdrawBalance();
-            // } catch (error) {
-            // }
           }
         }
         let result;
@@ -292,6 +288,21 @@ export class ZkTLSClient {
       console.log(`Run ${key}`)
       attestations[key] = await this._doZkTLS(reqParams, options, cb as RequestParamsCallback);
     }
+
+    attestations["__meta__"] = {
+      projectId: this.config.identity.projectId,
+    }
+
     return attestations;
+  }
+
+  async tryWithdrawBalance(limit: number = 100) {
+    if (this.planType != "SELF") return;
+
+    try {
+      await this.primusNetwork.withdrawBalance(TokenSymbol.ETH, limit);
+    } catch (err: any) {
+      console.log("tryWithdrawBalance failed:", err?.message, JSON.stringify(err));
+    }
   }
 }
