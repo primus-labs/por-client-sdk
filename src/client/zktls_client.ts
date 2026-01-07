@@ -297,12 +297,14 @@ export class ZkTLSClient {
   }
 
   async tryWithdrawBalance(limit: number = 100) {
-    if (this.planType != "SELF") return;
+    if (this.planType != "SELF") return true;
 
     try {
       await this.primusNetwork.withdrawBalance(TokenSymbol.ETH, limit);
+      return true;
     } catch (err: any) {
       console.log("tryWithdrawBalance failed:", err?.message, JSON.stringify(err));
     }
+    return false;
   }
 }

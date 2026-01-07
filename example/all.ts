@@ -1,10 +1,13 @@
 import { Scheduler, DataSource, PoRClient, loadConfigFromFile } from "../src";
 
+let withdrawTime = Date.now();
+const WITHDRAW_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000; // ms
 async function main() {
-  try {
-    const config = loadConfigFromFile();
-    const ds = new DataSource.ExchangeManager(config.exchanges);
+  const config = loadConfigFromFile();
+  const client = new PoRClient(config.app);
+  const ds = new DataSource.ExchangeManager(config.exchanges);
 
+  try {
     const params = {
       binanceSpot: () => ds.binance?.getSpotAccountInfoRequests(),
       binanceUsdSFuture: () => ds.binance?.getUsdSFutureAccountBalanceV3Requests(),
@@ -13,12 +16,23 @@ async function main() {
       asterUsdSFuture: () => ds.aster?.getUsdSFutureBalanceRequests(),
     };
 
-    const client = new PoRClient(config.app);
     const result = await client.run(params);
+    // const result = await client.run(params, { runZkvm: false, noProxy: false, algorithmType: "proxytls" });
     // console.log("result", JSON.stringify(result));
     console.log('proof fixture(json):', JSON.parse(result?.proof_fixture ?? "{}"));
   } catch (err: any) {
-    console.log("err:", err?.message, JSON.stringify(err));
+    console.log("main err:", err?.message, JSON.stringify(err));
+
+    {
+      const elapsedMs = Date.now() - withdrawTime;
+      if (elapsedMs >= WITHDRAW_INTERVAL_MS) {
+        const ret = await client.tryWithdrawBalance();
+        if (ret) {
+          withdrawTime = Date.now();
+        }
+      }
+    }
+
     throw err;
   }
 }

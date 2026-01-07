@@ -50,12 +50,14 @@ export class Scheduler {
     while (!this.stopped) {
       const startedAt = Date.now();
 
+      console.log("🚀 job start", new Date().toISOString());
       let shouldStop = false;
       try {
         await this.job();
       } catch (err: any) {
         shouldStop = this.opts.shouldStop?.(err) ?? false;
       }
+      console.log("✅ job done", new Date().toISOString());
 
       const elapsedMs = Date.now() - startedAt;
       const delayMs = Math.max(0, intervalMs - elapsedMs);

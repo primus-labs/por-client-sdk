@@ -45,6 +45,6 @@ export class PoRClient {
   }
 
   async tryWithdrawBalance(limit: number = 100) {
-    await this.zktlsClient.tryWithdrawBalance(limit);
+    return await this.zktlsClient.tryWithdrawBalance(limit);
   }
 }
