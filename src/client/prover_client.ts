@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from "axios";
 import FormData from "form-data";
 import fs from "fs";
 import { ClientError } from "../error.js";
-import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
+import { sleepMs, makeErrData } from "../utils.js";
 
 
 interface SubmitTaskInput {
@@ -138,7 +138,6 @@ export class ProverClient {
       if (!(err instanceof ClientError)) {
         err = new ClientError("73099", `Do doZkVM failed`, makeErrData(err));
       }
-      await mockErrorReport(err);
 
       throw err;
     }

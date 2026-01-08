@@ -1,7 +1,7 @@
 import { PrimusNetwork } from "@primuslabs/network-core-sdk";
 import { TokenSymbol } from "@primuslabs/network-core-sdk/dist/types";
 import { ethers } from "ethers";
-import { sleepMs, mockErrorReport, makeErrData } from "../utils.js";
+import { sleepMs, makeErrData } from "../utils.js";
 import { Options, getDefaultOptions, RequestParams, VERIFY_TYPE, RequestParamsInput, RequestParamsCallback } from "../types.js";
 import { ClientError } from "../error.js";
 import { DataServiceClient } from "./data_service_client.js";
@@ -271,7 +271,6 @@ export class ZkTLSClient {
       if (!(err instanceof ClientError)) {
         err = new ClientError("71099", `Do zkTLS failed`, makeErrData(err));
       }
-      await mockErrorReport(err);
 
       throw err;
     }

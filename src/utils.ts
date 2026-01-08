@@ -1,5 +1,4 @@
 import fs from "fs";
-import { ClientError } from "./error.js";
 
 /**
  * Save data to file
@@ -30,11 +29,5 @@ export function makeErrData(err: any) {
   if (err.code) errData.code = err.code;
   if (err.message) errData.message = err.message;
   if (err.data) errData.data = err.data;
-  console.log("makeErrData:", errData);
   return errData;
-}
-
-export async function mockErrorReport(err: ClientError) {
-  // TODO:
-  console.log('mockErrorReport: ', JSON.stringify(err));
 }

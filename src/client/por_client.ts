@@ -1,8 +1,11 @@
-import { saveToFile } from "../utils.js";
+import { saveToFile, makeErrData } from "../utils.js";
 import { Options, getDefaultOptions, RequestParamsInput } from "../types.js";
 import { ZkTLSClient } from "./zktls_client.js";
 import { ProverClient } from "./prover_client.js";
 import { AppConfig } from "../config_schema.js";
+import { ClientError } from "../error.js";
+import { DataServiceClient } from "./data_service_client.js";
+import { v4 as uuidv4 } from 'uuid';
 
 export class PoRClient {
   private readonly config: Required<AppConfig>;
@@ -19,6 +22,32 @@ export class PoRClient {
    * zkTLS + zkVM (optional)
    */
   async run(params: RequestParamsInput, options: Options = {}): Promise<any> {
+    try {
+      return await this._run(params, options);
+    } catch (err: any) {
+      if (!(err instanceof ClientError)) {
+        err = new ClientError("70099", `PoR failed`, makeErrData(err));
+      }
+
+      try {
+        const NO_REPORT_CODES = ["71008"];
+        if (NO_REPORT_CODES.includes(err.code)) return;
+
+        const client = new DataServiceClient(this.config.services.data.url);
+        const bizId = uuidv4();
+        const token = this.config.identity.token;
+        const projectId = this.config.identity.projectId;
+        const title = err.message;
+        const content = JSON.stringify(err);
+        await client.alertTrigger(bizId, projectId, token, title, content);
+      } catch (err: any) {
+        console.log("alertTrigger err:", err?.message, JSON.stringify(err));
+      }
+
+      throw err;
+    }
+  }
+  async _run(params: RequestParamsInput, options: Options = {}): Promise<any> {
     const opts = getDefaultOptions(options);
 
     console.log("do zkTLS");
@@ -37,7 +66,8 @@ export class PoRClient {
         programId: this.config.identity.programId,
         attestationData: JSON.stringify(attestationData)
       });
-      console.log("result", result);
+      
+      // console.log("result", result);
       return result;
     }
 

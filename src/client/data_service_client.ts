@@ -72,8 +72,33 @@ export class DataServiceClient {
     };
   }
 
+  async alertTrigger(
+    bizId: string,
+    projectId: string,
+    token: string,
+    title: string,
+    content: string,
+  ): Promise<any> {
+    const res = await this.client.post<ApiResponse<null>>(
+      "/public/alert/trigger",
+      {
+        origin: "POR_CLIENT",
+        severity: "critical",
+        occurredAt: Date.now().toString(),
+        bizId, projectId, title, content
+      },
+      {
+        headers: {
+          "POR-TOKEN": token,
+        },
+      }
+    );
+
+    this.unwrap("alertTrigger", res.data);
+  }
 
   private unwrap<T>(op: string, data: ApiResponse<T>): T {
+    // console.log('data_service.unwrap', op, JSON.stringify(data));
     if (data.rc === 0) {
       return data.result;
     }
