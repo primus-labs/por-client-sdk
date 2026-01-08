@@ -31,43 +31,44 @@ const AppIdentitySchema = z.object({
   token: z.string().min(1),
   projectId: z.string().min(1),
   programId: z.string().min(1),
-});
+}).strict();
 
 const AppRuntimeSchema = z.object({
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
   env: z.enum(["development", "production"]).default("production"),
   logVerbose: z.number().int().min(0).max(5).default(0),
-});
+  jobInterval: z.number().int().min(10).default(1800),
+}).strict();
 
 const ZkvmServiceSchema = z.object({
   url: z.url(),
-});
+}).strict();
 
 const DataServiceSchema = z.object({
   url: z.url(),
-});
+}).strict();
 
 const AppServicesSchema = z.object({
   zkvm: ZkvmServiceSchema,
   data: DataServiceSchema,
-});
+}).strict();
 
 const BlockchainSignerSchema = z.object({
   privateKey: z.string(),
-});
+}).strict();
 
 const BlockchainSchema = z.object({
   network: z.enum(["base", "base-sepolia"]).default("base"),
   rpcUrl: z.url().optional(),
   signer: BlockchainSignerSchema.optional(),
-});
+}).strict();
 
 const AppConfigSchema = z.object({
   identity: AppIdentitySchema,
   runtime: AppRuntimeSchema,
   services: AppServicesSchema,
   blockchain: BlockchainSchema,
-});
+}).strict();
 
 const ExchangesConfigSchema = z.object({
   binance: z.array(BinanceAccountSchema).optional(),

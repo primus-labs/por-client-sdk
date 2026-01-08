@@ -46,6 +46,7 @@ export class Scheduler {
 
   async start() {
     const intervalMs = this.opts.intervalMs;
+    console.log(`Start Scheduler at ${new Date().toISOString()} with job interval: ${intervalMs} (ms)`);
 
     while (!this.stopped) {
       const startedAt = Date.now();

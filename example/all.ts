@@ -1,7 +1,8 @@
 import { Scheduler, DataSource, PoRClient, loadConfigFromFile } from "../src";
 
+const config = loadConfigFromFile();
 let withdrawTime = Date.now();
-const WITHDRAW_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000; // ms
+const WITHDRAW_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
 async function main() {
   const config = loadConfigFromFile();
   const client = new PoRClient(config.app);
@@ -38,7 +39,7 @@ async function main() {
 }
 
 const scheduler = new Scheduler(main, {
-  intervalMs: 30 * 60 * 1000, // ms
+  intervalMs: config.app.runtime.jobInterval * 1000, // ms
   shouldStop: (err) => {
     if (err?.data?.code === "timeout") return true;
     return false;
