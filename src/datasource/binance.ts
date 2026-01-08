@@ -55,6 +55,20 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
     return makeHashComparisonParams(origRequests, verifyType);
   }
 
+  /// doc: https://developers.binance.com/docs/derivatives/coin-margined-futures/account/rest-api/Futures-Account-Balance
+  /// api: https://dapi.binance.com/dapi/v1/balance
+  public getCoinFutureAccountBalanceRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasCoinFutures) return undefined;
+
+    const signParams = { recvWindow: this.recvWindow };
+    const origRequests: any[] = [];
+    for (const acc of this.usdSFuturesAccounts) {
+      const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
+      origRequests.push(exchange.sign("balance", "dapiPrivate", "GET", { ...signParams }));
+    }
+    return makeHashComparisonParams(origRequests, verifyType);
+  }
+
   /// doc: https://developers.binance.com/docs/derivatives/portfolio-margin/account
   /// api: https://papi.binance.com/papi/v1/balance
   public getUnifiedAccountBalanceRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
