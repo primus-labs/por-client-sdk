@@ -9,6 +9,7 @@ interface SubmitTaskInput {
   token: string;
   projectId: string;
   programId: string;
+  network: string;
   attestationData: string;
 }
 
@@ -45,6 +46,7 @@ export class ProverClient {
     form.append("token", input.token);
     form.append("project_id", input.projectId);
     form.append("program_id", input.programId);
+    form.append("network", input.network);
     form.append("attestation_data", input.attestationData);
 
     const res = await this.client.post("/submitTask", form, {

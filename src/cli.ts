@@ -34,6 +34,7 @@ async function main() {
         token: config.app.identity.token,
         projectId: config.app.identity.projectId,
         programId: config.app.identity.programId,
+        network: config.app.blockchain.network,
         attestationData: attestation_data,
       });
       console.log('Task submitted:', result);
@@ -61,6 +62,7 @@ async function main() {
         token: config.app.identity.token,
         projectId: config.app.identity.projectId,
         programId: config.app.identity.programId,
+        network: config.app.blockchain.network,
         attestationData: attestation_data,
       });
       console.log('result:', result);

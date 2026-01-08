@@ -64,9 +64,10 @@ export class PoRClient {
         token: this.config.identity.token,
         projectId: this.config.identity.projectId,
         programId: this.config.identity.programId,
-        attestationData: JSON.stringify(attestationData)
+        network: this.config.blockchain.network,
+        attestationData: JSON.stringify(attestationData),
       });
-      
+
       // console.log("result", result);
       return result;
     }
