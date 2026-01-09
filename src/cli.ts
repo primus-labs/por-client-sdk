@@ -20,8 +20,8 @@ async function main() {
     .option("--description <DESCRIPTION>", "Description", "Default description.")
     .action(async (opts) => {
       console.log("uploadProgram");
-      const result = await api.uploadProgram(opts.filepath, opts.replace, 'My Program', '1.0', 'Program description');
-      console.log('Program uploaded, ID:', result.program_id);
+      const result = await api.uploadProgram(opts.filepath, config.app.identity.projectId, opts.replace, 'My Program', '1.0', 'Program description');
+      console.log('Program uploaded, ID:', result);
     });
 
   program

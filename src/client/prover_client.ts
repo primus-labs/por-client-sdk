@@ -21,6 +21,7 @@ export class ProverClient {
 
   async uploadProgram(
     filePath: string,
+    projectId: string,
     replace: boolean,
     name: string,
     version: string,
@@ -29,7 +30,8 @@ export class ProverClient {
   ): Promise<any> {
     const form = new FormData();
     form.append("file", fs.createReadStream(filePath));
-    form.append("replace", replace);
+    form.append("project_id", projectId);
+    form.append("replace", replace ? "true" : "false");
     form.append("prover", prover);
     form.append("name", name);
     form.append("version", version);
