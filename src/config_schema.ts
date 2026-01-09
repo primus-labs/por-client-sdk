@@ -97,7 +97,7 @@ function mask(value: string | undefined): string {
   return value.slice(0, 4) + "*".repeat(3) + value.slice(-4);
 }
 
-const SENSITIVE_KEYS = ["token", "privateKey", "apiKey", "apiSecret"];
+const SENSITIVE_KEYS = ["userToken", "privateKey", "apiKey", "apiSecret"];
 function maskConfig(obj: any): any {
   if (Array.isArray(obj)) return obj.map(maskConfig);
   if (obj && typeof obj === "object") {

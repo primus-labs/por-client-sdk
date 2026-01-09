@@ -35,11 +35,11 @@ export class PoRClient {
 
         const client = new DataServiceClient(this.config.services.data.url);
         const bizId = uuidv4();
-        const token = this.config.identity.token;
+        const userToken = this.config.identity.userToken;
         const projectId = this.config.identity.projectId;
         const title = err.message;
         const content = JSON.stringify(err);
-        await client.alertTrigger(bizId, projectId, token, title, content);
+        await client.alertTrigger(bizId, projectId, userToken, title, content);
       } catch (err: any) {
         console.log("alertTrigger err:", err?.message, JSON.stringify(err));
       }
@@ -61,9 +61,8 @@ export class PoRClient {
     if (opts.runZkvm && hasAny) {
       console.log("do zkVM");
       const result = await this.proverClient.doZkVM({
-        token: this.config.identity.token,
+        userToken: this.config.identity.userToken,
         projectId: this.config.identity.projectId,
-        programId: this.config.identity.programId,
         network: this.config.blockchain.network,
         attestationData: JSON.stringify(attestationData),
       });

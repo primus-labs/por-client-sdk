@@ -53,9 +53,9 @@ export class ZkTLSClient {
         if (this.planType === 'UNKNOWN') {
           const client = new DataServiceClient(this.config.services.data.url);
           const bizId = uuidv4();
-          const token = this.config.identity.token;
+          const userToken = this.config.identity.userToken;
           const projectId = this.config.identity.projectId;
-          const { subscriptionType } = await client.checkPayment(bizId, projectId, token);
+          const { subscriptionType } = await client.checkPayment(bizId, projectId, userToken);
           console.log(`SubscriptionType: ${subscriptionType}`);
           this.planType = 'SUBSCRIPTION';
           if (subscriptionType === "PLAN_SELF_PAID") {
@@ -71,9 +71,9 @@ export class ZkTLSClient {
         } else if (this.planType === 'SUBSCRIPTION') {
           const client = new DataServiceClient(this.config.services.data.url);
           const bizId = uuidv4();
-          const token = this.config.identity.token;
+          const userToken = this.config.identity.userToken;
           const projectId = this.config.identity.projectId;
-          const { taskId, taskTxHash, taskAttestors, submitterAddress } = await client.submitTask(bizId, projectId, token);
+          const { taskId, taskTxHash, taskAttestors, submitterAddress } = await client.submitTask(bizId, projectId, userToken);
           result = { taskId, taskTxHash, taskAttestors };
           attestParams.address = submitterAddress;
         }

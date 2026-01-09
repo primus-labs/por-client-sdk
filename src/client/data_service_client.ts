@@ -29,14 +29,14 @@ export class DataServiceClient {
   async submitTask(
     bizId: string,
     projectId: string,
-    token: string,
+    userToken: string,
   ): Promise<SubmitTaskResult> {
     const res = await this.client.get<ApiResponse<SubmitTaskResult>>(
       "/public/program/submitTask",
       {
         params: { bizId, projectId },
         headers: {
-          "POR-TOKEN": token,
+          "POR-TOKEN": userToken,
         },
       }
     );
@@ -53,14 +53,14 @@ export class DataServiceClient {
   async checkPayment(
     bizId: string,
     projectId: string,
-    token: string,
+    userToken: string,
   ): Promise<CheckPaymentResult> {
     const res = await this.client.get<ApiResponse<CheckPaymentResult>>(
       "/public/program/payment/check",
       {
         params: { bizId, projectId },
         headers: {
-          "POR-TOKEN": token,
+          "POR-TOKEN": userToken,
         },
       }
     );
@@ -75,7 +75,7 @@ export class DataServiceClient {
   async alertTrigger(
     bizId: string,
     projectId: string,
-    token: string,
+    userToken: string,
     title: string,
     content: string,
   ): Promise<any> {
@@ -89,7 +89,7 @@ export class DataServiceClient {
       },
       {
         headers: {
-          "POR-TOKEN": token,
+          "POR-TOKEN": userToken,
         },
       }
     );

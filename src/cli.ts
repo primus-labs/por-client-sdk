@@ -14,12 +14,13 @@ async function main() {
     .command("uploadProgram")
     .description("uploadProgram.")
     .requiredOption("--filepath <FILEPATH>", "Program file path")
+    .option("--replace", "Replace existing program if set", false)
     .option("--name <NAME>", "Program Name", "Default Name")
     .option("--version <VERSION>", "Version number", "1.0")
     .option("--description <DESCRIPTION>", "Description", "Default description.")
     .action(async (opts) => {
       console.log("uploadProgram");
-      const result = await api.uploadProgram(opts.filepath, 'My Program', '1.0', 'Program description');
+      const result = await api.uploadProgram(opts.filepath, opts.replace, 'My Program', '1.0', 'Program description');
       console.log('Program uploaded, ID:', result.program_id);
     });
 
@@ -31,9 +32,8 @@ async function main() {
       console.log("submitTask");
       const attestation_data = fs.readFileSync(opts.filepath, { encoding: "utf-8" });
       const result = await api.submitTask({
-        token: config.app.identity.token,
+        userToken: config.app.identity.userToken,
         projectId: config.app.identity.projectId,
-        programId: config.app.identity.programId,
         network: config.app.blockchain.network,
         attestationData: attestation_data,
       });
@@ -59,9 +59,8 @@ async function main() {
       console.log("submitTask and getResult.");
       const attestation_data = fs.readFileSync(opts.filepath, { encoding: "utf-8" });
       const result = await api.doZkVM({
-        token: config.app.identity.token,
+        userToken: config.app.identity.userToken,
         projectId: config.app.identity.projectId,
-        programId: config.app.identity.programId,
         network: config.app.blockchain.network,
         attestationData: attestation_data,
       });

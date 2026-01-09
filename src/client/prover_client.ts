@@ -6,9 +6,8 @@ import { sleepMs, makeErrData } from "../utils.js";
 
 
 interface SubmitTaskInput {
-  token: string;
+  userToken: string;
   projectId: string;
-  programId: string;
   network: string;
   attestationData: string;
 }
@@ -22,6 +21,7 @@ export class ProverClient {
 
   async uploadProgram(
     filePath: string,
+    replace: boolean,
     name: string,
     version: string,
     desc: string,
@@ -29,6 +29,7 @@ export class ProverClient {
   ): Promise<any> {
     const form = new FormData();
     form.append("file", fs.createReadStream(filePath));
+    form.append("replace", replace);
     form.append("prover", prover);
     form.append("name", name);
     form.append("version", version);
@@ -43,9 +44,8 @@ export class ProverClient {
 
   async submitTask(input: SubmitTaskInput): Promise<any> {
     const form = new FormData();
-    form.append("token", input.token);
+    form.append("user_token", input.userToken);
     form.append("project_id", input.projectId);
-    form.append("program_id", input.programId);
     form.append("network", input.network);
     form.append("attestation_data", input.attestationData);
 
