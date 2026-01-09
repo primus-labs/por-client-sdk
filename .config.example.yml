@@ -5,9 +5,8 @@ app:
   # Application identity (provided by Primus Labs)
   # ------------------------------------------------------------------
   identity:
-    token: "<YOUR_TOKEN>"
+    userToken: "<YOUR_TOKEN>"
     projectId: "<YOUR_PROJECT_ID>"
-    programId: "<YOUR_PROGRAM_ID>"
 
   # ------------------------------------------------------------------
   # Runtime configuration

@@ -28,9 +28,8 @@ export const AsterAccountSchema = AccountSchema(AsterKindSchema);
 export type AsterAccount = z.infer<typeof AsterAccountSchema>;
 
 const AppIdentitySchema = z.object({
-  token: z.string().min(1),
+  userToken: z.string().min(1),
   projectId: z.string().min(1),
-  programId: z.string().min(1),
 }).strict();
 
 const AppRuntimeSchema = z.object({
