@@ -38,17 +38,17 @@ app:
       privateKey: "<PRIVATE_KEY>"
 
 # --------------------------------------------------------------------
-# Exchange API configurations
-# At least one exchange must be configured: binance or aster
+# Data source configurations
+# At least one datasource must be configured: binance or aster
 # --------------------------------------------------------------------
-exchanges:
+datasource:
   binance:
     # Binance account #1
     - apiKey: "binance-key-123"
       apiSecret: "binance-secret-abc"
       kind: ["spot", "usds-futures"] # spot | usds-futures | coin-futures | unified
 
-    # Binance account #2 (disabled)
+    # Binance account #2 (disabled by set enabled to false)
     - apiKey: "binance-key-456"
       apiSecret: "binance-secret-def"
       kind: ["spot", "unified"]

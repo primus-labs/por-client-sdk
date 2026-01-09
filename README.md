@@ -41,7 +41,7 @@ app:               # Core application configuration
   services:        # External service endpoints
   blockchain:      # Blockchain connection and signer info
 
-exchanges:         # Exchange account configurations
+datasource:        # Datasource account configurations
   binance:         # Binance exchange accounts
   aster:           # Aster exchange accounts
 ```
@@ -103,11 +103,11 @@ Blockchain connection and signer configuration.
 
 ---
 
-### Exchange Accounts (`exchanges`)
+### Datasource Accounts
 
-Supports multiple exchange accounts. At least one exchange is required. Now only support Binance and Aster.
+Supports multiple datasource accounts. At least one datasource is required. Now only support Binance and Aster.
 
-#### Fields of `exchange`
+#### Fields of each `datasource`
 
 | Field       | Type    | Description                                    | Example                     |
 | ----------- | ------- | ---------------------------------------------- | --------------------------- |
@@ -120,4 +120,6 @@ Supports multiple exchange accounts. At least one exchange is required. Now only
 
 ## Data Sources
 
-> TODO: Document supported data sources and sample requests.
+Supported datasources:
+* Binance
+* Aster

@@ -1,6 +1,6 @@
 import { makeHashComparisonParams, signQuery } from "./helper.js";
 import { VERIFY_TYPE, RequestParamsOutput } from "../types.js";
-import { AsterKind, AsterAccount, ExchangesConfig } from "../config_schema.js";
+import { AsterKind, AsterAccount, DatasourceConfig } from "../config_schema.js";
 import { BaseExchange } from "./base_exchange.js";
 
 
@@ -27,7 +27,7 @@ function makerAsterOrigRequests(url: string, accounts: AsterAccount[], params = 
 
 
 export class Aster extends BaseExchange<AsterAccount, AsterKind> {
-  constructor(accounts?: ExchangesConfig["aster"]) {
+  constructor(accounts?: DatasourceConfig["aster"]) {
     super(accounts);
   }
   get hasSpot() { return this.spotAccounts.length > 0; }

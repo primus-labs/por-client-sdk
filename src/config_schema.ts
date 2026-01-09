@@ -3,7 +3,7 @@ import path from "path";
 import { z } from "zod";
 import yaml from "js-yaml";
 
-export type Exchanges = "binance" | "aster";
+export type DATASOURCE = "binance" | "aster";
 
 const BinanceKindSchema = z.enum(["spot", "usds-futures", "coin-futures", "unified"]);
 const AsterKindSchema = z.enum(["spot", "usds-futures"]);
@@ -33,18 +33,18 @@ const AppIdentitySchema = z.object({
 }).strict();
 
 const AppRuntimeSchema = z.object({
-  version: z.string().regex(/^\d+\.\d+\.\d+$/),
+  version: z.string().regex(/^\d+\.\d+\.\d+$/).default("0.1.0"),
   env: z.enum(["development", "production"]).default("production"),
   logVerbose: z.number().int().min(0).max(5).default(0),
   jobInterval: z.number().int().min(10).default(1800),
 }).strict();
 
 const ZkvmServiceSchema = z.object({
-  url: z.url(),
+  url: z.url().default("https://api-por.primuslabs.xyz:38080"),
 }).strict();
 
 const DataServiceSchema = z.object({
-  url: z.url(),
+  url: z.url().default("https://api-por-data.primuslabs.xyz/por-admin"),
 }).strict();
 
 const AppServicesSchema = z.object({
@@ -69,24 +69,24 @@ const AppConfigSchema = z.object({
   blockchain: BlockchainSchema,
 }).strict();
 
-const ExchangesConfigSchema = z.object({
+const DatasourceConfigSchema = z.object({
   binance: z.array(BinanceAccountSchema).optional(),
   aster: z.array(AsterAccountSchema).optional(),
 }).strict().refine(
   (data) => (data.binance?.length ?? 0) > 0 || (data.aster?.length ?? 0) > 0,
   {
-    message: "At least one exchange account of [binance,aster] must be configured",
-    path: ["exchanges"],
+    message: "At least one datasource account of [binance,aster] must be configured",
+    path: ["datasource"],
   }
 );
 
 const ConfigSchema = z.object({
   app: AppConfigSchema,
-  exchanges: ExchangesConfigSchema,
+  datasource: DatasourceConfigSchema,
 }).strict();
 
 export type AppConfig = z.infer<typeof AppConfigSchema>;
-export type ExchangesConfig = z.infer<typeof ExchangesConfigSchema>;
+export type DatasourceConfig = z.infer<typeof DatasourceConfigSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 
 

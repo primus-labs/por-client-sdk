@@ -1,10 +1,10 @@
-import { DataSource, PoRClient, loadConfigFromFile } from "../src";
+import { DatasourceManager, PoRClient, loadConfigFromFile } from "../src";
 
 async function main() {
   try {
     const config = loadConfigFromFile();
     console.log("config:", JSON.stringify(config));
-    const ds = new DataSource.ExchangeManager(config.exchanges);
+    const ds = new DatasourceManager(config.datasource);
     console.log("ds:", JSON.stringify(ds));
 
     const client = new PoRClient(config.app);

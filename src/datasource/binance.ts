@@ -1,12 +1,12 @@
 import ccxt from "ccxt";
 import { makeHashComparisonParams } from "./helper.js";
 import { VERIFY_TYPE, RequestParamsOutput } from "../types.js";
-import { BinanceKind, BinanceAccount, ExchangesConfig } from "../config_schema.js";
+import { BinanceKind, BinanceAccount, DatasourceConfig } from "../config_schema.js";
 import { BaseExchange } from "./base_exchange.js";
 
 
 export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
-  constructor(accounts?: ExchangesConfig["binance"]) {
+  constructor(accounts?: DatasourceConfig["binance"]) {
     super(accounts);
   }
 
