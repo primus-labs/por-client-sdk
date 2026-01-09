@@ -21,8 +21,7 @@ npm run build
 
 2. Ensure required fields are set:
 
-   * `app.identity.token` and `app.identity.projectId` for authentication
-   * `app.identity.programId` for program execution
+   * `app.identity.userToken` and `app.identity.projectId` for authentication
 
 3. Run an example: (Need configure your Binance API Key first)
 
@@ -56,9 +55,8 @@ Contains application authorization and identification.
 
 | Field     | Type   | Description                                      | Example           |
 | --------- | ------ | ------------------------------------------------ | ----------------- |
-| token     | string | Authentication token issued for this application | `"my-auth-token"` |
+| userToken | string | Authentication token issued for this application | `"my-auth-token"` |
 | projectId | string | Unique project identifier                        | `"project-123"`   |
-| programId | string | Unique program identifier                        | `"program-abc"`   |
 
 #### 2. Runtime (`app.runtime`)
 
