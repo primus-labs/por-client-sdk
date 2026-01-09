@@ -48,8 +48,8 @@ const DataServiceSchema = z.object({
 }).strict();
 
 const AppServicesSchema = z.object({
-  zkvm: ZkvmServiceSchema,
-  data: DataServiceSchema,
+  zkvm: z.preprocess((v) => v ?? {}, ZkvmServiceSchema),
+  data: z.preprocess((v) => v ?? {}, DataServiceSchema),
 }).strict();
 
 const BlockchainSignerSchema = z.object({
@@ -64,9 +64,9 @@ const BlockchainSchema = z.object({
 
 const AppConfigSchema = z.object({
   identity: AppIdentitySchema,
-  runtime: AppRuntimeSchema,
-  services: AppServicesSchema,
-  blockchain: BlockchainSchema,
+  runtime: z.preprocess((v) => v ?? {}, AppRuntimeSchema),
+  services: z.preprocess((v) => v ?? {}, AppServicesSchema),
+  blockchain: z.preprocess((v) => v ?? {}, BlockchainSchema),
 }).strict();
 
 const DatasourceConfigSchema = z.object({
