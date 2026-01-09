@@ -30,8 +30,8 @@ app:
   # Blockchain configuration
   # ------------------------------------------------------------------
   blockchain:
-    network: base-sepolia # base | base-sepolia
-    rpcUrl: "https://sepolia.base.org" # optional, override default RPC
+    network: base # base | base-sepolia
+    rpcUrl: "https://mainnet.base.org" # optional, override default RPC
 
     # Required only if subscription type is PLAN_SELF_PAID
     signer:
