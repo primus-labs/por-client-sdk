@@ -1,4 +1,30 @@
 import { sleepMs } from "./utils.js";
+import fs from "fs";
+import path from "path";
+
+interface SchedulerState {
+  lastStartedAt: number;
+}
+
+function readState(file: string): SchedulerState | null {
+  try {
+    if (!fs.existsSync(file)) return null;
+    const raw = fs.readFileSync(file, "utf8");
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function writeState(file: string, state: SchedulerState) {
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(state), "utf8");
+  } catch (err) {
+    console.warn("⚠️ Failed to write scheduler state:", err);
+  }
+}
+
 
 type JobFn = () => Promise<void>;
 
@@ -6,52 +32,69 @@ interface SchedulerOptions {
   intervalMs: number; // ms
   shouldStop?: (err: any) => boolean;
   stopMode?: "immediate" | "delayed"; // default: delayed
+  stateFile?: string;
 }
 
 export class Scheduler {
   private stopped = false;
   private lastSigintTime = 0;
   private sigintCount = 0;
+  private stateFile?: string;
 
   constructor(
     private job: JobFn,
     private opts: SchedulerOptions
   ) {
     if (!this.opts.stopMode) this.opts.stopMode = "delayed";
+    this.stateFile = opts.stateFile;
 
     process.on("SIGTERM", () => this.stop("SIGTERM"));
     process.on("SIGINT", () => this.stop("SIGINT"));
   }
 
   stop(signal?: string) {
-    if (signal) {
-      if (signal !== "SIGINT") {
-        console.log(`🛑 Received ${signal}.`);
-      }
-    } else {
-      console.log("🛑 Stop requested.");
+    if (signal && signal !== "SIGINT") {
+      console.log(`🛑 Received ${signal}.`);
     }
 
     const now = Date.now();
     if (signal === "SIGINT") {
-      if (now - this.lastSigintTime <= 2000) { this.sigintCount++; }
-      else { this.sigintCount = 1; }
+      if (now - this.lastSigintTime <= 2000) this.sigintCount++;
+      else this.sigintCount = 1;
       this.lastSigintTime = now;
-      if (this.sigintCount >= 2) { process.exit(1); }
-      else { console.log(`🛑 Received ${signal}. (Press twice Ctrl + C to exit)`); }
+
+      if (this.sigintCount >= 2) process.exit(1);
+      console.log("🛑 Press Ctrl+C twice to exit");
     }
 
     this.stopped = true;
   }
 
   async start() {
-    const intervalMs = this.opts.intervalMs;
+    const { intervalMs } = this.opts;
     console.log(`Start Scheduler at ${new Date().toISOString()} with job interval: ${intervalMs} (ms)`);
 
+    if (this.stateFile) {
+      const state = readState(this.stateFile);
+      if (state?.lastStartedAt) {
+        const elapsed = Date.now() - state.lastStartedAt;
+        const delay = intervalMs - elapsed;
+
+        if (delay > 0) {
+          console.log(`⏳ Recovering schedule, wait the next in ${delay / 1000.0} s`);
+          await sleepMs(delay);
+        }
+      }
+    }
     while (!this.stopped) {
       const startedAt = Date.now();
 
-      console.log("🚀 job start", new Date().toISOString());
+      if (this.stateFile) {
+        writeState(this.stateFile, { lastStartedAt: startedAt });
+      }
+
+      console.log("🚀 job start", new Date(startedAt).toISOString());
+
       let shouldStop = false;
       try {
         await this.job();
@@ -69,7 +112,7 @@ export class Scheduler {
       }
 
       if (!this.stopped) {
-        console.log(`⏳ Next in ${delayMs} ms ...`);
+        console.log(`⏳ Next in ${delayMs / 1000.0} s`);
         await sleepMs(delayMs);
       }
 
