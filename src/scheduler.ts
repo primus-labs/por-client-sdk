@@ -18,7 +18,8 @@ function readState(file: string): SchedulerState | null {
 
 function writeState(file: string, state: SchedulerState) {
   try {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const dir = path.dirname(path.resolve(file));
+    fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(file, JSON.stringify(state), "utf8");
   } catch (err) {
     console.warn("⚠️ Failed to write scheduler state:", err);
