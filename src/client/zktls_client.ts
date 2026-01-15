@@ -131,7 +131,7 @@ export class ZkTLSClient {
           getAllJsonResponse: "true"
         };
 
-        const result = await this.primusNetwork.attest(params, 6 * 60 * 1000);
+        const result = await this.primusNetwork.attest(params, 10 * 60 * 1000);
         console.log(`✅ attest done (${Date.now() - start}ms):`, result);
         return result;
       } catch (err: any) {
