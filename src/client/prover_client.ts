@@ -102,7 +102,7 @@ export class ProverClient {
     }
   }
 
-  async getResultWithTimeout(taskId: string, timeoutMs: number = 600_000, intervalMs: number = 5000): Promise<any> {
+  async getResultWithTimeout(taskId: string, timeoutMs: number = 1200 * 1000, intervalMs: number = 10000): Promise<any> {
     const start = Date.now();
 
     const isPending = (status?: string) =>
@@ -112,7 +112,7 @@ export class ProverClient {
     while (true) {
       const elapsed = Date.now() - start;
       if (elapsed > timeoutMs) {
-        throw new ClientError("73003", `Timeout: cannot get task[${taskId}] complete result within ${timeoutMs}ms`, errData);
+        throw new ClientError("73003", `Timeout: cannot get task[${taskId}] complete result within ${timeoutMs / 1000} s`, errData);
       }
 
       try {
