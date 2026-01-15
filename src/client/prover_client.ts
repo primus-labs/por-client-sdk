@@ -72,7 +72,7 @@ export class ProverClient {
 
     // data.rc === 1
     const { mc, msg } = data;
-    throw new ClientError("73001", `${op} failed`, { op, mc, msg });
+    throw new ClientError("73001", `zkVM ${op} failed`, { op, mc, msg });
   }
 
 
@@ -92,7 +92,7 @@ export class ProverClient {
 
         attempt++;
         if (attempt > maxRetries) {
-          throw new ClientError("73002", `Submitting task failed after ${maxRetries} retries`, makeErrData(err));
+          throw new ClientError("73002", `zkVM Submitting task failed after ${maxRetries} retries`, makeErrData(err));
         }
 
         const delay = baseDelay * 2 ** (attempt - 1);
@@ -112,7 +112,7 @@ export class ProverClient {
     while (true) {
       const elapsed = Date.now() - start;
       if (elapsed > timeoutMs) {
-        throw new ClientError("73003", `Timeout: cannot get task[${taskId}] complete result within ${timeoutMs / 1000} s`, errData);
+        throw new ClientError("73003", `zkVM Timeout: cannot get complete result within ${timeoutMs / 1000} s`, errData);
       }
 
       try {
@@ -140,7 +140,7 @@ export class ProverClient {
       return result;
     } catch (err: any) {
       if (!(err instanceof ClientError)) {
-        err = new ClientError("73099", `Do doZkVM failed`, makeErrData(err));
+        err = new ClientError("73099", `Do zkVM failed`, makeErrData(err));
       }
 
       throw err;
