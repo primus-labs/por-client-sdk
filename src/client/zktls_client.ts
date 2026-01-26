@@ -172,7 +172,7 @@ export class ZkTLSClient {
   private async _verifyAndPollTaskResultWithRetry(
     attestResult: any,
     maxRetries = 4,
-    baseDelay = 1000
+    baseDelay = 2000
   ): Promise<any> {
     let attempt = 0;
     const start = Date.now();
