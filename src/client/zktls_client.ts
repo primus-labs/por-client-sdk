@@ -128,7 +128,8 @@ export class ZkTLSClient {
           attMode: { algorithmType: opts.algorithmType },
           specialTask: opts.specialTask,
           noProxy: opts.noProxy,
-          getAllJsonResponse: "true"
+          getAllJsonResponse: "true",
+          extendedParams: JSON.stringify({ attUrlOptimization: true }), // optimization the url of attestation.
         };
 
         const result = await this.primusNetwork.attest(params, 10 * 60 * 1000);
