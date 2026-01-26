@@ -149,6 +149,9 @@ export class ZkTLSClient {
             if (err instanceof ClientError) throw err;
             throw new ClientError("71004", `Attesting zkTLS failed`, makeErrData(err));
           }
+          if (info.code && info.code === "00001") { // Algorithm startup exception.
+            await sleepMs(60 * 1000);
+          }
         }
 
         if (attempt > maxRetries) {

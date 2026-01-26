@@ -14,10 +14,12 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
   get hasUsdSFutures() { return this.usdSFuturesAccounts.length > 0; }
   get hasCoinFutures() { return this.coinFuturesAccounts.length > 0; }
   get hasUnified() { return this.unifiedAccounts.length > 0; }
+  get hasMargin() { return this.marginAccounts.length > 0; }
   get spotAccounts() { return this.getAccounts("spot"); }
   get usdSFuturesAccounts() { return this.getAccounts("usds-futures"); }
   get coinFuturesAccounts() { return this.getAccounts("coin-futures"); }
   get unifiedAccounts() { return this.getAccounts("unified"); }
+  get marginAccounts() { return this.getAccounts("margin"); }
 
   ///
   /// =======================================================================
@@ -80,6 +82,20 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
       const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
       origRequests.push(exchange.sign("um/positionRisk", "papi", "GET", signParams));
       origRequests.push(exchange.sign("balance", "papi", "GET", { ...signParams }));
+    }
+    return makeHashComparisonParams(origRequests, verifyType);
+  }
+
+  /// doc: https://developers.binance.com/docs/margin_trading/account/Query-Isolated-Margin-Account-Info
+  /// api: https://api.binance.com/sapi/v1/margin/isolated/account
+  public getMarginAccountBalanceRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasMargin) return undefined;
+
+    const signParams = { recvWindow: this.recvWindow };
+    const origRequests: any[] = [];
+    for (const acc of this.marginAccounts) {
+      const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
+      origRequests.push(exchange.sign("margin/isolated/account", "sapi", "GET", { ...signParams }));
     }
     return makeHashComparisonParams(origRequests, verifyType);
   }

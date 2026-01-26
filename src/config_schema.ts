@@ -5,7 +5,7 @@ import yaml from "js-yaml";
 
 export type DATASOURCE = "binance" | "aster";
 
-const BinanceKindSchema = z.enum(["spot", "usds-futures", "coin-futures", "unified"]);
+const BinanceKindSchema = z.enum(["spot", "usds-futures", "coin-futures", "unified", "margin"]);
 const AsterKindSchema = z.enum(["spot", "usds-futures"]);
 export type AsterKind = z.infer<typeof AsterKindSchema>;
 export type BinanceKind = z.infer<typeof BinanceKindSchema>;
