@@ -80,7 +80,7 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
     const origRequests: any[] = [];
     for (const acc of this.unifiedAccounts) {
       const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
-      origRequests.push(exchange.sign("um/positionRisk", "papi", "GET", signParams));
+      // origRequests.push(exchange.sign("um/positionRisk", "papi", "GET", signParams));
       origRequests.push(exchange.sign("balance", "papi", "GET", { ...signParams }));
     }
     return makeHashComparisonParams(origRequests, verifyType);
