@@ -7,7 +7,7 @@ import fs from "fs";
 
 async function main() {
   const config = loadConfigFromFile();
-  const api = new ProverClient(config.app.services.zkvm.url);
+  const api = new ProverClient(config.app.services.zkvm);
   const program = new Command();
 
   program

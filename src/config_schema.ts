@@ -41,7 +41,9 @@ const AppRuntimeSchema = z.object({
 
 const ZkvmServiceSchema = z.object({
   url: z.url().default("https://api-por.primuslabs.xyz:38080"),
+  getProofResultTimeout: z.number().int().min(10).default(2400),
 }).strict();
+export type ZkvmServiceConfig = z.infer<typeof ZkvmServiceSchema>;
 
 const DataServiceSchema = z.object({
   url: z.url().default("https://api-por-data.primuslabs.xyz/por-admin"),

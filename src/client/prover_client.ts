@@ -3,7 +3,7 @@ import FormData from "form-data";
 import fs from "fs";
 import { ClientError } from "../error.js";
 import { sleepMs, makeErrData } from "../utils.js";
-
+import { ZkvmServiceConfig } from "../config_schema.js";
 
 interface SubmitTaskInput {
   userToken: string;
@@ -13,10 +13,12 @@ interface SubmitTaskInput {
 }
 
 export class ProverClient {
+  private readonly config: Required<ZkvmServiceConfig>;
   private client: AxiosInstance;
 
-  constructor(url: string, timeout = 30_000) {
-    this.client = axios.create({ baseURL: url, timeout });
+  constructor(config: ZkvmServiceConfig, timeout = 30_000) {
+    this.config = { ...config };
+    this.client = axios.create({ baseURL: this.config.url, timeout });
   }
 
   async uploadProgram(
@@ -102,7 +104,7 @@ export class ProverClient {
     }
   }
 
-  async getResultWithTimeout(taskId: string, timeoutMs: number = 1200 * 1000, intervalMs: number = 10000): Promise<any> {
+  async getResultWithTimeout(taskId: string, timeoutMs: number = 2400 * 1000, intervalMs: number = 20 * 1000): Promise<any> {
     const start = Date.now();
 
     const isPending = (status?: string) =>
@@ -136,7 +138,7 @@ export class ProverClient {
   private async _doZkVM(input: SubmitTaskInput): Promise<any> {
     try {
       const submitResult = await this.submitTaskWithRetry(input);
-      const result = await this.getResultWithTimeout(submitResult.task_id);
+      const result = await this.getResultWithTimeout(submitResult.task_id, this.config.getProofResultTimeout * 1000);
       return result;
     } catch (err: any) {
       if (!(err instanceof ClientError)) {

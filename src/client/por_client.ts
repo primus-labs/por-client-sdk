@@ -15,7 +15,7 @@ export class PoRClient {
   constructor(config: AppConfig) {
     this.config = { ...config };
     this.zktlsClient = new ZkTLSClient({ ...config });
-    this.proverClient = new ProverClient(config.services.zkvm.url);
+    this.proverClient = new ProverClient(config.services.zkvm);
   }
 
   /**

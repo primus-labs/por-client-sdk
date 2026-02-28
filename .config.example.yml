@@ -23,6 +23,7 @@ app:
   services:
     zkvm:
       url: https://api-por.primuslabs.xyz:38080
+      getProofResultTimeout: 2400 # seconds
     data:
       url: https://api-por-data.primuslabs.xyz/por-admin
 
