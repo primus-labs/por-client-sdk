@@ -1,5 +1,5 @@
 import ccxt from "ccxt";
-import { makeHashComparisonParams } from "./helper.js";
+import { makeZkTlsRequestParams } from "./helper.js";
 import { VERIFY_TYPE, RequestParamsOutput } from "../types.js";
 import { BinanceKind, BinanceAccount, DatasourceConfig } from "../config_schema.js";
 import { BaseExchange } from "./base_exchange.js";
@@ -40,7 +40,7 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
       const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
       origRequests.push(exchange.sign("account", "private", "GET", { ...signParams, omitZeroBalances: true }));
     }
-    return makeHashComparisonParams(origRequests, verifyType);
+    return makeZkTlsRequestParams(origRequests, verifyType);
   }
 
   /// doc: https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3
@@ -54,7 +54,7 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
       const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
       origRequests.push(exchange.sign("balance", "fapiPrivateV3", "GET", { ...signParams }));
     }
-    return makeHashComparisonParams(origRequests, verifyType);
+    return makeZkTlsRequestParams(origRequests, verifyType);
   }
 
   /// doc: https://developers.binance.com/docs/derivatives/coin-margined-futures/account/rest-api/Futures-Account-Balance
@@ -68,7 +68,7 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
       const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
       origRequests.push(exchange.sign("balance", "dapiPrivate", "GET", { ...signParams }));
     }
-    return makeHashComparisonParams(origRequests, verifyType);
+    return makeZkTlsRequestParams(origRequests, verifyType);
   }
 
   /// doc: https://developers.binance.com/docs/derivatives/portfolio-margin/account
@@ -83,7 +83,7 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
       // origRequests.push(exchange.sign("um/positionRisk", "papi", "GET", signParams));
       origRequests.push(exchange.sign("balance", "papi", "GET", { ...signParams }));
     }
-    return makeHashComparisonParams(origRequests, verifyType);
+    return makeZkTlsRequestParams(origRequests, verifyType);
   }
 
   /// doc: https://developers.binance.com/docs/margin_trading/account/Query-Isolated-Margin-Account-Info
@@ -97,6 +97,6 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
       const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
       origRequests.push(exchange.sign("margin/isolated/account", "sapi", "GET", { ...signParams }));
     }
-    return makeHashComparisonParams(origRequests, verifyType);
+    return makeZkTlsRequestParams(origRequests, verifyType);
   }
 }

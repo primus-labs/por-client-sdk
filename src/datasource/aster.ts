@@ -1,4 +1,4 @@
-import { makeHashComparisonParams, signQuery } from "./helper.js";
+import { makeZkTlsRequestParams, signQuery } from "./helper.js";
 import { VERIFY_TYPE, RequestParamsOutput } from "../types.js";
 import { AsterKind, AsterAccount, DatasourceConfig } from "../config_schema.js";
 import { BaseExchange } from "./base_exchange.js";
@@ -49,7 +49,7 @@ export class Aster extends BaseExchange<AsterAccount, AsterKind> {
 
     const url = "https://sapi.asterdex.com/api/v1/account";
     const origRequests = makerAsterOrigRequests(url, this.spotAccounts);
-    return makeHashComparisonParams(origRequests, verifyType);
+    return makeZkTlsRequestParams(origRequests, verifyType);
   }
 
   /// doc: https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#futures-account-balance-v2-user_data
@@ -59,6 +59,6 @@ export class Aster extends BaseExchange<AsterAccount, AsterKind> {
 
     const url = "https://fapi.asterdex.com/fapi/v2/balance";
     const origRequests = makerAsterOrigRequests(url, this.usdSFuturesAccounts);
-    return makeHashComparisonParams(origRequests, verifyType);
+    return makeZkTlsRequestParams(origRequests, verifyType);
   }
 }

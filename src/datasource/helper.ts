@@ -7,7 +7,14 @@ export function signQuery(secretKey: string, params: any) {
   return `${query}&signature=${signature}`;
 }
 
-export function makeHashComparisonParams(origRequests: any[], verifyType: VERIFY_TYPE): RequestParams {
+export interface OrigRequest {
+  url: any;
+  method?: string; // default "GET"
+  body?: any;
+  headers?: any;
+}
+
+function makeHashComparisonParams(origRequests: OrigRequest[]): RequestParams {
   if (!Array.isArray(origRequests)) {
     throw new Error("Invalid input: origRequests must be an array");
   }
@@ -23,24 +30,28 @@ export function makeHashComparisonParams(origRequests: any[], verifyType: VERIFY
 
     requestParams.requests.push({
       url: origRequest.url,
-      method: "GET",
-      header: { ...origRequest.headers },
-      body: "",
+      method: origRequest.method ?? "GET",
+      header: { ...(origRequest.headers ?? {}) },
+      body: origRequest.body ?? "",
     });
 
-    if (verifyType == 'HASH_COMPARISON') {
-      requestParams.responseResolves.push([
-        {
-          keyName: `${i}`,
-          parseType: "json",
-          parsePath: "$",
-          op: "SHA256_EX",
-        },
-      ]);
-    } else {
-      throw Error("not supported verify type");
-    }
+    requestParams.responseResolves.push([
+      {
+        keyName: `${i}`,
+        parseType: "json",
+        parsePath: "$",
+        op: "SHA256_EX",
+      },
+    ]);
   }
 
   return requestParams;
+}
+
+export function makeZkTlsRequestParams(origRequests: OrigRequest[], verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
+  if (verifyType == 'HASH_COMPARISON') {
+    return makeHashComparisonParams(origRequests);
+  }
+
+  throw Error("not supported verify type");
 }
