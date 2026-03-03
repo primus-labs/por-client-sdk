@@ -97,6 +97,26 @@ export class DataServiceClient {
     this.unwrap("alertTrigger", res.data);
   }
 
+  async projectConfig(
+    projectId: string,
+    userToken: string,
+    metadata: any,
+  ): Promise<any> {
+    const res = await this.client.post<ApiResponse<null>>(
+      "/public/project/config",
+      {
+        projectId, metadata
+      },
+      {
+        headers: {
+          "POR-TOKEN": userToken,
+        },
+      }
+    );
+
+    this.unwrap("projectConfig", res.data);
+  }
+
   private unwrap<T>(op: string, data: ApiResponse<T>): T {
     // console.log('data_service.unwrap', op, JSON.stringify(data));
     if (data.rc === 0) {

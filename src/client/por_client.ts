@@ -7,6 +7,8 @@ import { ClientError } from "../error.js";
 import { DataServiceClient } from "./data_service_client.js";
 import { v4 as uuidv4 } from 'uuid';
 
+let gobalHasStarted = false;
+
 export class PoRClient {
   private readonly config: Required<AppConfig>;
   private zktlsClient: ZkTLSClient;
@@ -16,6 +18,18 @@ export class PoRClient {
     this.config = { ...config };
     this.zktlsClient = new ZkTLSClient({ ...config });
     this.proverClient = new ProverClient(config.services.zkvm);
+
+    this.initialize();
+  }
+
+  async initialize() {
+    if (gobalHasStarted) return;
+    gobalHasStarted = true;
+
+    const client = new DataServiceClient(this.config.services.data.url);
+    const userToken = this.config.identity.userToken;
+    const projectId = this.config.identity.projectId;
+    await client.projectConfig(projectId, userToken, { jobInterval: 2345 });
   }
 
   /**
