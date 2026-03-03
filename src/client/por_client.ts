@@ -29,7 +29,11 @@ export class PoRClient {
     const client = new DataServiceClient(this.config.services.data.url);
     const userToken = this.config.identity.userToken;
     const projectId = this.config.identity.projectId;
-    await client.projectConfig(projectId, userToken, { jobInterval: 2345 });
+    try {
+      await client.projectConfig(projectId, userToken, { jobInterval: this.config.runtime.jobInterval });
+    } catch (error) {
+      console.log('projectConfig error', error);
+    }
   }
 
   /**

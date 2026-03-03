@@ -57,6 +57,20 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
     return makeZkTlsRequestParams(origRequests, verifyType);
   }
 
+  /// doc: https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Account-Information-V3
+  /// api: https://fapi.binance.com/fapi/v3/account
+  public getUsdSFutureV3AccountRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasUsdSFutures) return undefined;
+
+    const signParams = { recvWindow: this.recvWindow };
+    const origRequests: any[] = [];
+    for (const acc of this.usdSFuturesAccounts) {
+      const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
+      origRequests.push(exchange.sign("account", "fapiPrivateV3", "GET", { ...signParams }));
+    }
+    return makeZkTlsRequestParams(origRequests, verifyType);
+  }
+
   /// doc: https://developers.binance.com/docs/derivatives/coin-margined-futures/account/rest-api/Futures-Account-Balance
   /// api: https://dapi.binance.com/dapi/v1/balance
   public getCoinFutureAccountBalanceRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
@@ -82,6 +96,20 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
       const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
       // origRequests.push(exchange.sign("um/positionRisk", "papi", "GET", signParams));
       origRequests.push(exchange.sign("balance", "papi", "GET", { ...signParams }));
+    }
+    return makeZkTlsRequestParams(origRequests, verifyType);
+  }
+
+  /// doc: https://developers.binance.com/docs/derivatives/portfolio-margin/account/Account-Information
+  /// api: https://papi.binance.com/papi/v1/account
+  public getUnifiedV1AccountRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasUnified) return undefined;
+
+    const signParams = { recvWindow: this.recvWindow };
+    const origRequests: any[] = [];
+    for (const acc of this.unifiedAccounts) {
+      const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
+      origRequests.push(exchange.sign("account", "papi", "GET", { ...signParams }));
     }
     return makeZkTlsRequestParams(origRequests, verifyType);
   }

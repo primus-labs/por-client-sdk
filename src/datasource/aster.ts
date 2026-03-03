@@ -61,4 +61,14 @@ export class Aster extends BaseExchange<AsterAccount, AsterKind> {
     const origRequests = makerAsterOrigRequests(url, this.usdSFuturesAccounts);
     return makeZkTlsRequestParams(origRequests, verifyType);
   }
+
+  /// doc: https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#account-information-v4-user_data
+  /// api: https://fapi.asterdex.com/fapi/v4/account
+  public getUsdSFutureV4AccountRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasUsdSFutures) return undefined;
+
+    const url = "https://fapi.asterdex.com/fapi/v4/account";
+    const origRequests = makerAsterOrigRequests(url, this.usdSFuturesAccounts);
+    return makeZkTlsRequestParams(origRequests, verifyType);
+  }
 }
