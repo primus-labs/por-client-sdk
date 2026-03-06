@@ -3,18 +3,31 @@ import path from "path";
 import { z } from "zod";
 import yaml from "js-yaml";
 
-export type DATASOURCE = "binance" | "aster";
+export type DATASOURCE = "binance" | "aster" | "grvt" | "bybit" | "hyperliquid" | "pacifica" | "extended";
 
 const BinanceKindSchema = z.enum(["spot", "usds-futures", "coin-futures", "unified", "margin"]);
+export type BinanceKind = z.infer<typeof BinanceKindSchema>;
 const AsterKindSchema = z.enum(["spot", "usds-futures"]);
 export type AsterKind = z.infer<typeof AsterKindSchema>;
-export type BinanceKind = z.infer<typeof BinanceKindSchema>;
+const GrvtKindSchema = z.enum(["main"]);
+export type GrvtKind = z.infer<typeof GrvtKindSchema>;
+const BybitKindSchema = z.enum(["main"]);
+export type BybitKind = z.infer<typeof BybitKindSchema>;
+const HyperliquidKindSchema = z.enum(["main"]);
+export type HyperliquidKind = z.infer<typeof HyperliquidKindSchema>;
+const PacificaKindSchema = z.enum(["main"]);
+export type PacificaKind = z.infer<typeof PacificaKindSchema>;
+const ExtendedKindSchema = z.enum(["main"]);
+export type ExtendedKind = z.infer<typeof ExtendedKindSchema>;
 
 const BaseAccountSchema = z.object({
-  apiKey: z.string().min(1),
-  apiSecret: z.string().min(1),
+  apiKey: z.string().optional().default(""),
+  apiSecret: z.string().optional().default(""),
   enabled: z.boolean().optional().default(true),
   description: z.string().optional().default(""),
+  subAccountId: z.string().optional().default(""), // grvt
+  vaultId: z.string().optional().default(""), // grvt
+  address: z.string().optional().default(""), // hyperliquid, pacifica, etc.
 });
 const AccountSchema = <K extends z.ZodTypeAny>(kind: K) =>
   BaseAccountSchema.extend({
@@ -23,9 +36,18 @@ const AccountSchema = <K extends z.ZodTypeAny>(kind: K) =>
 
 export const BinanceAccountSchema = AccountSchema(BinanceKindSchema);
 export type BinanceAccount = z.infer<typeof BinanceAccountSchema>;
-
 export const AsterAccountSchema = AccountSchema(AsterKindSchema);
 export type AsterAccount = z.infer<typeof AsterAccountSchema>;
+export const GrvtAccountSchema = AccountSchema(GrvtKindSchema);
+export type GrvtAccount = z.infer<typeof GrvtAccountSchema>;
+export const BybitAccountSchema = AccountSchema(BybitKindSchema);
+export type BybitAccount = z.infer<typeof BybitAccountSchema>;
+export const HyperliquidAccountSchema = AccountSchema(HyperliquidKindSchema);
+export type HyperliquidAccount = z.infer<typeof HyperliquidAccountSchema>;
+export const PacificaAccountSchema = AccountSchema(PacificaKindSchema);
+export type PacificaAccount = z.infer<typeof PacificaAccountSchema>;
+export const ExtendedAccountSchema = AccountSchema(ExtendedKindSchema);
+export type ExtendedAccount = z.infer<typeof ExtendedAccountSchema>;
 
 const AppIdentitySchema = z.object({
   userToken: z.string().min(1),
@@ -74,10 +96,21 @@ const AppConfigSchema = z.object({
 const DatasourceConfigSchema = z.object({
   binance: z.array(BinanceAccountSchema).optional(),
   aster: z.array(AsterAccountSchema).optional(),
+  grvt: z.array(GrvtAccountSchema).optional(),
+  bybit: z.array(BybitAccountSchema).optional(),
+  hyperliquid: z.array(HyperliquidAccountSchema).optional(),
+  pacifica: z.array(PacificaAccountSchema).optional(),
+  extended: z.array(ExtendedAccountSchema).optional(),
 }).strict().refine(
-  (data) => (data.binance?.length ?? 0) > 0 || (data.aster?.length ?? 0) > 0,
+  (data) => (data.binance?.length ?? 0) > 0
+    || (data.aster?.length ?? 0) > 0
+    || (data.grvt?.length ?? 0) > 0
+    || (data.bybit?.length ?? 0) > 0
+    || (data.hyperliquid?.length ?? 0) > 0
+    || (data.pacifica?.length ?? 0) > 0
+    || (data.extended?.length ?? 0) > 0,
   {
-    message: "At least one datasource account of [binance,aster] must be configured",
+    message: "At least one datasource account of [binance,aster,grvt,bybit,hyperliquid,pacifica,extended] must be configured",
     path: ["datasource"],
   }
 );
