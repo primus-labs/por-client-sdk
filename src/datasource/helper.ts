@@ -1,10 +1,25 @@
-import { VERIFY_TYPE, RequestParams } from "../types.js";
+import { VERIFY_TYPE, RequestParams, RequestParamsOutput } from "../types.js";
 import { createHmac } from "node:crypto";
 
 export function signQuery(secretKey: string, params: any) {
   const query = new URLSearchParams(params).toString();
   const signature = createHmac("sha256", secretKey).update(query).digest("hex");
   return `${query}&signature=${signature}`;
+}
+
+export function mergeManyRequestParams(
+  list: RequestParamsOutput[]
+): RequestParamsOutput {
+  return list.reduce<RequestParamsOutput>((acc, cur) => {
+    if (!acc) return cur;
+    if (!cur) return acc;
+
+    return {
+      verifyType: acc.verifyType,
+      requests: [...acc.requests, ...cur.requests],
+      responseResolves: [...acc.responseResolves, ...cur.responseResolves],
+    };
+  }, undefined);
 }
 
 export interface OrigRequest {

@@ -1,4 +1,4 @@
-import { makeZkTlsRequestParams } from "./helper.js";
+import { makeZkTlsRequestParams, mergeManyRequestParams } from "./helper.js";
 import { VERIFY_TYPE, RequestParamsOutput } from "../types.js";
 import { GrvtKind, GrvtAccount, DatasourceConfig } from "../config_schema.js";
 import { BaseExchange } from "./base_exchange.js";
@@ -26,8 +26,7 @@ export class Grvt extends BaseExchange<GrvtAccount, GrvtKind> {
 
   async _getAuthInfo(apiKey: string): Promise<AuthInfo> {
     const cached = this.authCache.get(apiKey)
-
-    if (cached && Date.now() < cached.expireAt + 3600_000) {
+    if (cached && Date.now() < cached.expireAt + 300_000) {
       return cached
     }
 
@@ -56,7 +55,7 @@ export class Grvt extends BaseExchange<GrvtAccount, GrvtKind> {
       accountId,
       expireAt: Date.now()
     }
-    // console.log("authInfo:", authInfo);
+    this.authCache.set(apiKey, authInfo)
 
     return authInfo
   }
@@ -121,5 +120,21 @@ export class Grvt extends BaseExchange<GrvtAccount, GrvtKind> {
       });
     }
     return makeZkTlsRequestParams(origRequests, verifyType);
+  }
+
+  public async getV1Summary(
+    verifyType: VERIFY_TYPE = "HASH_COMPARISON",
+    kinds: string[] = ["account_summary", "vault_investor_summary"]
+  ): Promise<RequestParamsOutput> {
+    const requests: Promise<RequestParamsOutput>[] = [];
+    if (kinds.includes("account_summary")) {
+      requests.push(this.getV1AccountSummary(verifyType));
+    }
+    if (kinds.includes("vault_investor_summary")) {
+      requests.push(this.getV1VaultInvestorSummary(verifyType));
+    }
+
+    const res = await Promise.all(requests);
+    return mergeManyRequestParams(res);
   }
 }
