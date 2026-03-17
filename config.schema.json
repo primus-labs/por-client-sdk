@@ -428,7 +428,7 @@
         },
         "extended": {
           "type": "array",
-          "description": "Hyperliquid exchange account keys",
+          "description": "Extended exchange account keys",
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -454,6 +454,42 @@
                 "$ref": "#/definitions/generalKind"
               },
               "address": {
+                "$ref": "#/definitions/general"
+              }
+            }
+          }
+        },
+        "lighter": {
+          "type": "array",
+          "description": "Lighter exchange account keys",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "apiKey",
+              "apiSecret"
+            ],
+            "properties": {
+              "apiKey": {
+                "$ref": "#/definitions/apiKey"
+              },
+              "apiSecret": {
+                "$ref": "#/definitions/apiSecret"
+              },
+              "enabled": {
+                "$ref": "#/definitions/enabled"
+              },
+              "description": {
+                "$ref": "#/definitions/description"
+              },
+              "kind": {
+                "$ref": "#/definitions/generalKind"
+              },
+              "accountIndex": {
+                "$ref": "#/definitions/general"
+              },
+              "poolIndex": {
                 "$ref": "#/definitions/general"
               }
             }

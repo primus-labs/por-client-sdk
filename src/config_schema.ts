@@ -3,7 +3,7 @@ import path from "path";
 import { z } from "zod";
 import yaml from "js-yaml";
 
-export type DATASOURCE = "binance" | "aster" | "grvt" | "bybit" | "hyperliquid" | "pacifica" | "extended";
+export type DATASOURCE = "binance" | "aster" | "grvt" | "bybit" | "hyperliquid" | "pacifica" | "extended" | "lighter";
 
 const BinanceKindSchema = z.enum(["spot", "usds-futures", "coin-futures", "unified", "margin"]);
 export type BinanceKind = z.infer<typeof BinanceKindSchema>;
@@ -19,6 +19,8 @@ const PacificaKindSchema = z.enum(["main"]);
 export type PacificaKind = z.infer<typeof PacificaKindSchema>;
 const ExtendedKindSchema = z.enum(["main"]);
 export type ExtendedKind = z.infer<typeof ExtendedKindSchema>;
+const LighterKindSchema = z.enum(["main"]);
+export type LighterKind = z.infer<typeof LighterKindSchema>;
 
 const BaseAccountSchema = z.object({
   apiKey: z.string().optional().default(""),
@@ -28,6 +30,8 @@ const BaseAccountSchema = z.object({
   subAccountId: z.string().optional().default(""), // grvt
   vaultId: z.string().optional().default(""), // grvt
   address: z.string().optional().default(""), // hyperliquid, pacifica, etc.
+  accountIndex: z.string().optional().default(""), // lighter
+  poolIndex: z.string().optional().default(""), // lighter
 });
 const AccountSchema = <K extends z.ZodTypeAny>(kind: K) =>
   BaseAccountSchema.extend({
@@ -48,6 +52,8 @@ export const PacificaAccountSchema = AccountSchema(PacificaKindSchema);
 export type PacificaAccount = z.infer<typeof PacificaAccountSchema>;
 export const ExtendedAccountSchema = AccountSchema(ExtendedKindSchema);
 export type ExtendedAccount = z.infer<typeof ExtendedAccountSchema>;
+export const LighterAccountSchema = AccountSchema(LighterKindSchema);
+export type LighterAccount = z.infer<typeof LighterAccountSchema>;
 
 const AppIdentitySchema = z.object({
   userToken: z.string().min(1),
@@ -101,6 +107,7 @@ const DatasourceConfigSchema = z.object({
   hyperliquid: z.array(HyperliquidAccountSchema).optional(),
   pacifica: z.array(PacificaAccountSchema).optional(),
   extended: z.array(ExtendedAccountSchema).optional(),
+  lighter: z.array(LighterAccountSchema).optional(),
 }).strict().refine(
   (data) => (data.binance?.length ?? 0) > 0
     || (data.aster?.length ?? 0) > 0
@@ -108,9 +115,10 @@ const DatasourceConfigSchema = z.object({
     || (data.bybit?.length ?? 0) > 0
     || (data.hyperliquid?.length ?? 0) > 0
     || (data.pacifica?.length ?? 0) > 0
-    || (data.extended?.length ?? 0) > 0,
+    || (data.extended?.length ?? 0) > 0
+    || (data.lighter?.length ?? 0) > 0,
   {
-    message: "At least one datasource account of [binance,aster,grvt,bybit,hyperliquid,pacifica,extended] must be configured",
+    message: "At least one datasource account of [binance,aster,grvt,bybit,hyperliquid,pacifica,extended,lighter] must be configured",
     path: ["datasource"],
   }
 );

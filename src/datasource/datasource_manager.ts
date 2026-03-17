@@ -6,6 +6,7 @@ import { Bybit } from "./bybit.js";
 import { Hyperliquid } from "./hyperliquid.js";
 import { Pacifica } from "./pacifica.js";
 import { Extended } from "./extended.js";
+import { Lighter } from "./lighter.js";
 
 
 /**
@@ -23,6 +24,7 @@ export class DatasourceManager {
   public readonly hyperliquid?: Hyperliquid;
   public readonly pacifica?: Pacifica;
   public readonly extended?: Extended;
+  public readonly lighter?: Lighter;
 
   constructor(config: DatasourceConfig) {
     if (config.binance) this.binance = new Binance(config.binance);
@@ -32,5 +34,6 @@ export class DatasourceManager {
     if (config.hyperliquid) this.hyperliquid = new Hyperliquid(config.hyperliquid);
     if (config.pacifica) this.pacifica = new Pacifica(config.pacifica);
     if (config.extended) this.extended = new Extended(config.extended);
+    if (config.lighter) this.lighter = new Lighter(config.lighter);
   }
 }
