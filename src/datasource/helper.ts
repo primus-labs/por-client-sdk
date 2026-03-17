@@ -29,7 +29,7 @@ export interface OrigRequest {
   headers?: any;
 }
 
-function makeHashComparisonParams(origRequests: OrigRequest[]): RequestParams {
+function makeHashComparisonParams(origRequests: OrigRequest[], options?: any): RequestParams {
   if (!Array.isArray(origRequests)) {
     throw new Error("Invalid input: origRequests must be an array");
   }
@@ -38,6 +38,7 @@ function makeHashComparisonParams(origRequests: OrigRequest[]): RequestParams {
     verifyType: 'HASH_COMPARISON',
     requests: [],
     responseResolves: [],
+    options,
   };
 
   for (let i = 0; i < origRequests.length; i++) {
@@ -63,9 +64,9 @@ function makeHashComparisonParams(origRequests: OrigRequest[]): RequestParams {
   return requestParams;
 }
 
-export function makeZkTlsRequestParams(origRequests: OrigRequest[], verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParams {
+export function makeZkTlsRequestParams(origRequests: OrigRequest[], verifyType: VERIFY_TYPE = 'HASH_COMPARISON', options?: any): RequestParams {
   if (verifyType == 'HASH_COMPARISON') {
-    return makeHashComparisonParams(origRequests);
+    return makeHashComparisonParams(origRequests, options);
   }
 
   throw Error("not supported verify type");

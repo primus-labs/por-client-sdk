@@ -4,6 +4,7 @@ export type RequestParams = {
   verifyType: VERIFY_TYPE;
   requests: AttNetworkRequest[];
   responseResolves: AttNetworkResponseResolve[][];
+  options?: Record<string, any>;
 };
 export type RequestParamsOutput = RequestParams | undefined;
 export type RequestParamsInput = Record<string, () => RequestParamsOutput>;

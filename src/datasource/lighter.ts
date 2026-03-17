@@ -44,7 +44,7 @@ export class Lighter extends BaseExchange<LighterAccount, LighterKind> {
       });
       // const lighterTotal = accountValue1 + accountValue2
     }
-    return makeZkTlsRequestParams(origRequests, verifyType);
+    return makeZkTlsRequestParams(origRequests, verifyType, { "attUrlOptimization": false });
   }
 }
 
