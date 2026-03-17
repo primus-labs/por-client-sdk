@@ -7,8 +7,8 @@ export type RequestParams = {
   options?: Record<string, any>;
 };
 export type RequestParamsOutput = RequestParams | undefined;
-export type RequestParamsInput = Record<string, () => RequestParamsOutput>;
-export type RequestParamsCallback = () => RequestParams;
+export type RequestParamsInput = Record<string, () => RequestParamsOutput | Promise<RequestParamsOutput>>;
+export type RequestParamsCallback = () => RequestParams | Promise<RequestParams>;
 
 export interface Options {
   sslCipher?: string;

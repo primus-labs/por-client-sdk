@@ -114,7 +114,7 @@ export class ZkTLSClient {
 
     while (true) {
       try {
-        const reqParams = requestParamsCallback ? requestParamsCallback() : requestParams;
+        const reqParams = requestParamsCallback ? await requestParamsCallback() : requestParams;
         if (reqParams.requests.length !== reqParams.responseResolves.length) {
           throw new ClientError("71001", `Request params size mismatch ${reqParams.requests.length} != ${reqParams.responseResolves.length}`);
         }
@@ -287,7 +287,7 @@ export class ZkTLSClient {
 
     for (const [key, cb] of Object.entries(params)) {
       if (!cb) continue; // skip undefined cb
-      const reqParams = cb();
+      const reqParams = await cb();
       if (!reqParams) continue; // skip undefined requestParams
 
       console.log(`Run ${key}`)
