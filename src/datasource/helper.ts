@@ -14,11 +14,20 @@ export function mergeManyRequestParams(
     if (!acc) return cur;
     if (!cur) return acc;
 
-    return {
+    let p = {
       verifyType: acc.verifyType,
       requests: [...acc.requests, ...cur.requests],
       responseResolves: [...acc.responseResolves, ...cur.responseResolves],
     };
+    let idx = 0;
+    p.responseResolves = p.responseResolves.map(group =>
+      group.map(item => ({
+        ...item,
+        keyName: `${idx++}`,
+        
+      }))
+    );
+    return p;
   }, undefined);
 }
 
