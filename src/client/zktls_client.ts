@@ -28,7 +28,13 @@ export class ZkTLSClient {
   private async _initializePrimusNetwork(opts: Options, wallet: any, chainId: number): Promise<void> {
     try {
       console.log("🚀 Initializing PrimusNetwork...");
-      const result = await this.primusNetwork.init(wallet, chainId, opts.noProxy === true ? "native" : undefined);
+      const result = await this.primusNetwork.init(
+        wallet,
+        chainId,
+        opts.noProxy === true ? "native" : undefined,
+        opts.projectName,
+        { algorithmVersion: opts.algorithmVersion }
+      );
       console.log("✅ PrimusNetwork initialized:", result);
     } catch (err: any) {
       throw new ClientError("71002", `Initializing PrimusNetwork failed`, makeErrData(err));

@@ -17,6 +17,8 @@ export interface Options {
   noProxy?: boolean;
   runZkvm?: boolean;
   saveAtt?: boolean;
+  projectName?: string;
+  algorithmVersion?: string;
 }
 
 export function getDefaultOptions(options: Options): Options {
@@ -27,6 +29,8 @@ export function getDefaultOptions(options: Options): Options {
     noProxy: true,
     runZkvm: true,
     saveAtt: true,
+    projectName: "",
+    algorithmVersion: "1.1.1",
   };
   return { ...defaults, ...options };
 }
