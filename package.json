@@ -1,6 +1,6 @@
 {
   "name": "@primuslabs/por-client-sdk",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "author": "Primus Labs <dev@primuslabs.org>",
   "description": "Primus PoR client sdk",
   "license": "ISC",
@@ -26,7 +26,7 @@
     "publish": "npm publish --access public"
   },
   "dependencies": {
-    "@primuslabs/network-core-sdk": "0.1.12",
+    "@primuslabs/network-core-sdk": "0.1.13",
     "axios": "^1.13.2",
     "ccxt": "^4.5.11",
     "commander": "^14.0.1",
