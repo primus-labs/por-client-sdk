@@ -18,6 +18,7 @@ export interface SubmitTaskResult {
 export interface CheckPaymentResult {
   projectId: string;
   subscriptionType: string;
+  disableOffchain?: boolean; // donot run offchain if === true
 }
 
 export class DataServiceClient {
@@ -69,6 +70,7 @@ export class DataServiceClient {
     return {
       projectId: raw.projectId,
       subscriptionType: raw.subscriptionType,
+      disableOffchain: raw.disableOffchain,
     };
   }
 

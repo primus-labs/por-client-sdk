@@ -48,7 +48,7 @@ export class PoRClient {
       }
 
       try {
-        const NO_REPORT_CODES = ["71008"];
+        const NO_REPORT_CODES = ["71008", "71009"];
         if (NO_REPORT_CODES.includes(err.code)) return;
 
         const client = new DataServiceClient(this.config.services.data.url);

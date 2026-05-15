@@ -56,13 +56,16 @@ export class ZkTLSClient {
 
     while (true) {
       try {
-        if (this.planType === 'UNKNOWN') {
+        {
           const client = new DataServiceClient(this.config.services.data.url);
           const bizId = uuidv4();
           const userToken = this.config.identity.userToken;
           const projectId = this.config.identity.projectId;
-          const { subscriptionType } = await client.checkPayment(bizId, projectId, userToken);
+          const { subscriptionType, disableOffchain } = await client.checkPayment(bizId, projectId, userToken);
           console.log(`SubscriptionType: ${subscriptionType}`);
+          if (disableOffchain === true) {
+            throw new ClientError("71009", "Disabled offchain.");
+          }
           this.planType = 'SUBSCRIPTION';
           if (subscriptionType === "PLAN_SELF_PAID") {
             this.planType = 'SELF';
@@ -71,6 +74,7 @@ export class ZkTLSClient {
             }
           }
         }
+
         let result;
         if (this.planType === 'SELF') {
           result = await this.primusNetwork.submitTask(attestParams);
@@ -86,7 +90,7 @@ export class ZkTLSClient {
         console.log(`✅ submitTask done (${Date.now() - start}ms):`, result);
         return result;
       } catch (err: any) {
-        const NO_RETRY_CODES = ["72001", "71008"]; // from data service client
+        const NO_RETRY_CODES = ["72001", "71008", "71009"]; // from data service client
         if (err instanceof ClientError && NO_RETRY_CODES.includes(err.code)) throw err;
 
         attempt++;
@@ -140,7 +144,7 @@ export class ZkTLSClient {
           }),
         };
 
-        const result = await this.primusNetwork.attest(params, 10 * 60 * 1000);
+        const result = await this.primusNetwork.attest(params, 10 * 60 * 1000, { "projectId": this.config.identity.projectId });
         console.log(`✅ attest done (${Date.now() - start}ms):`, result);
         return result;
       } catch (err: any) {
