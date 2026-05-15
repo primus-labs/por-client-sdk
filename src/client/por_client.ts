@@ -47,10 +47,10 @@ export class PoRClient {
         err = new ClientError("70099", `PoR failed`, makeErrData(err));
       }
 
-      try {
-        const NO_REPORT_CODES = ["71008", "71009"];
-        if (NO_REPORT_CODES.includes(err.code)) return;
+      const NO_REPORT_CODES = ["71008", "71009"];
+      if (NO_REPORT_CODES.includes(err.code)) throw err;
 
+      try {
         const client = new DataServiceClient(this.config.services.data.url);
         const bizId = uuidv4();
         const userToken = this.config.identity.userToken;
