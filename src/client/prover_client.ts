@@ -28,7 +28,7 @@ export class ProverClient {
     name: string,
     version: string,
     desc: string,
-    prover = "succinct"
+    prover = "brevis" // brevis succinct
   ): Promise<any> {
     const form = new FormData();
     form.append("file", fs.createReadStream(filePath));

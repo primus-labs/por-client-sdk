@@ -16,11 +16,13 @@ async function main() {
     .requiredOption("--filepath <FILEPATH>", "Program file path")
     .option("--replace", "Replace existing program if set", false)
     .option("--name <NAME>", "Program Name", "Default Name")
+    .option("--prover <PROVER>", "Prover", "brevis")
     .option("--version <VERSION>", "Version number", "1.0")
     .option("--description <DESCRIPTION>", "Description", "Default description.")
     .action(async (opts) => {
       console.log("uploadProgram");
-      const result = await api.uploadProgram(opts.filepath, config.app.identity.projectId, opts.replace, 'My Program', '1.0', 'Program description');
+      const result = await api.uploadProgram(opts.filepath, config.app.identity.projectId,
+        opts.replace, opts.name, opts.version, opts.description, opts.prover);
       console.log('Program uploaded, ID:', result);
     });
 

@@ -31,7 +31,8 @@
           "usds-futures",
           "coin-futures",
           "unified",
-          "margin"
+          "margin",
+          "funding"
         ]
       }
     },

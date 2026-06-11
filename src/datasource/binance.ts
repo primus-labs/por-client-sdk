@@ -15,11 +15,14 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
   get hasCoinFutures() { return this.coinFuturesAccounts.length > 0; }
   get hasUnified() { return this.unifiedAccounts.length > 0; }
   get hasMargin() { return this.marginAccounts.length > 0; }
+  get hasFunding() { return this.fundingAccounts.length > 0; }
+
   get spotAccounts() { return this.getAccounts("spot"); }
   get usdSFuturesAccounts() { return this.getAccounts("usds-futures"); }
   get coinFuturesAccounts() { return this.getAccounts("coin-futures"); }
   get unifiedAccounts() { return this.getAccounts("unified"); }
   get marginAccounts() { return this.getAccounts("margin"); }
+  get fundingAccounts() { return this.getAccounts("funding"); }
 
   ///
   /// =======================================================================
@@ -124,6 +127,20 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
     for (const acc of this.marginAccounts) {
       const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
       origRequests.push(exchange.sign("margin/isolated/account", "sapi", "GET", { ...signParams }));
+    }
+    return makeZkTlsRequestParams(origRequests, verifyType);
+  }
+
+  /// doc: https://developers.binance.com/docs/wallet/asset/funding-wallet
+  /// api: https://api.binance.com/sapi/v1/asset/get-funding-asset
+  public getFundingWalletRequests(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+    if (!this.hasFunding) return undefined;
+
+    const signParams = { recvWindow: this.recvWindow };
+    const origRequests: any[] = [];
+    for (const acc of this.fundingAccounts) {
+      const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
+      origRequests.push(exchange.sign("asset/get-funding-asset", "sapi", "POST", { ...signParams }));
     }
     return makeZkTlsRequestParams(origRequests, verifyType);
   }

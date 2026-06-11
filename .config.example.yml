@@ -47,7 +47,7 @@ datasource:
     # Binance account #1
     - apiKey: "binance-key-123"
       apiSecret: "binance-secret-abc"
-      kind: ["spot", "usds-futures"] # spot | usds-futures | coin-futures | unified | margin
+      kind: ["spot", "usds-futures"] # spot | usds-futures | coin-futures | unified | margin | funding
 
     # Binance account #2 (disabled by set enabled to false)
     - apiKey: "binance-key-456"
