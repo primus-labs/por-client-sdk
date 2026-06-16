@@ -140,7 +140,10 @@ export class Binance extends BaseExchange<BinanceAccount, BinanceKind> {
     const origRequests: any[] = [];
     for (const acc of this.fundingAccounts) {
       const exchange = new ccxt.binance({ apiKey: acc.apiKey, secret: acc.apiSecret });
-      origRequests.push(exchange.sign("asset/get-funding-asset", "sapi", "POST", { ...signParams }));
+      const req = exchange.sign("asset/get-funding-asset", "sapi", "GET", { ...signParams });
+      req.method = "POST";
+      req.body = undefined;
+      origRequests.push(req);
     }
     return makeZkTlsRequestParams(origRequests, verifyType);
   }

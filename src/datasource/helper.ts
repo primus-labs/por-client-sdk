@@ -24,7 +24,6 @@ export function mergeManyRequestParams(
       group.map(item => ({
         ...item,
         keyName: `${idx++}`,
-        
       }))
     );
     return p;
@@ -57,7 +56,7 @@ function makeHashComparisonParams(origRequests: OrigRequest[], options?: any): R
       url: origRequest.url,
       method: origRequest.method ?? "GET",
       header: { ...(origRequest.headers ?? {}) },
-      body: origRequest.body ?? "",
+      body: origRequest.body,
     });
 
     requestParams.responseResolves.push([
