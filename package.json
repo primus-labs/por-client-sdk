@@ -1,6 +1,6 @@
 {
   "name": "@primuslabs/por-client-sdk",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "author": "Primus Labs <dev@primuslabs.org>",
   "description": "Primus PoR client sdk",
   "license": "ISC",

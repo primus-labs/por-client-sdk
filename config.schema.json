@@ -194,7 +194,7 @@
           "additionalProperties": false,
           "required": [
             // "signer",
-            "network"
+            // "network"
           ],
           "properties": {
             "network": {
@@ -357,6 +357,39 @@
               },
               "kind": {
                 "$ref": "#/definitions/generalKind"
+              }
+            }
+          }
+        },
+        "okx": {
+          "type": "array",
+          "description": "Okx exchange account keys",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "apiKey",
+              "apiSecret"
+            ],
+            "properties": {
+              "apiKey": {
+                "$ref": "#/definitions/apiKey"
+              },
+              "apiSecret": {
+                "$ref": "#/definitions/apiSecret"
+              },
+              "enabled": {
+                "$ref": "#/definitions/enabled"
+              },
+              "description": {
+                "$ref": "#/definitions/description"
+              },
+              "kind": {
+                "$ref": "#/definitions/generalKind"
+              },
+              "passphrase": {
+                "$ref": "#/definitions/general"
               }
             }
           }
