@@ -361,6 +361,32 @@
             }
           }
         },
+        "moomoo": {
+          "type": "array",
+          "description": "moomoo",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "requestFile"
+            ],
+            "properties": {
+              "enabled": {
+                "$ref": "#/definitions/enabled"
+              },
+              "description": {
+                "$ref": "#/definitions/description"
+              },
+              "kind": {
+                "$ref": "#/definitions/generalKind"
+              },
+              "requestFile": {
+                "$ref": "#/definitions/general"
+              }
+            }
+          }
+        },
         "okx": {
           "type": "array",
           "description": "Okx exchange account keys",

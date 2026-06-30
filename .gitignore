@@ -8,6 +8,7 @@ package-lock.json
 .env
 /*attestation*.json
 
-.config.yml
-.state.json
-.cache
+/.config.yml
+/.state.json
+/.cache
+/request_data

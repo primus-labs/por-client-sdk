@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { VERIFY_TYPE, RequestParams, RequestParamsOutput } from "../types.js";
 import { createHmac } from "node:crypto";
 
@@ -31,10 +32,10 @@ export function mergeManyRequestParams(
 }
 
 export interface OrigRequest {
-  url: any;
+  url: string;
   method?: string; // default "GET"
   body?: any;
-  headers?: any;
+  headers?: Record<string, string>;
 }
 
 function makeHashComparisonParams(origRequests: OrigRequest[], options?: any): RequestParams {
@@ -78,4 +79,61 @@ export function makeZkTlsRequestParams(origRequests: OrigRequest[], verifyType: 
   }
 
   throw Error("not supported verify type");
+}
+
+
+export function readRequestFile(filepath: string): OrigRequest[] {
+  try {
+    if (!fs.existsSync(filepath)) {
+      throw new Error(`File not found: ${filepath}`);
+    }
+
+    const content = fs.readFileSync(filepath, "utf-8");
+    if (!content || content.trim() === '') {
+      throw new Error(`${filepath} is empty`);
+    }
+
+    let data: any;
+    try {
+      data = JSON.parse(content);
+    } catch (parseError) {
+      throw new Error(`Invalid JSON in ${filepath}: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+    }
+
+    if (!Array.isArray(data)) {
+      throw new Error(`Parsed data is not an array in ${filepath}`);
+    }
+
+    if (data.length === 0) {
+      throw new Error(`${filepath} contains empty array`);
+    }
+
+    const errors: string[] = [];
+    const validRequests: OrigRequest[] = [];
+
+    data.forEach((item, index) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        errors.push(`Item ${index} is not an object`);
+        return;
+      }
+
+      // to-do: more check
+
+      const validRequest: OrigRequest = {
+        url: item.url,
+        method: item.method,
+        body: item.body,
+        headers: item.headers,
+      };
+      validRequests.push(validRequest);
+    });
+
+    if (errors.length > 0) {
+      throw new Error(`Validation errors in ${filepath}:\n${errors.join('\n')}`);
+    }
+
+    return validRequests;
+  } catch (error) {
+    throw error;
+  }
 }

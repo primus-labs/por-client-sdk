@@ -2,8 +2,9 @@ import fs from "fs";
 import path from "path";
 import { z } from "zod";
 import yaml from "js-yaml";
+import paths from "paths";
 
-export type DATASOURCE = "binance" | "aster" | "grvt" | "bybit" | "okx" | "hyperliquid" | "pacifica" | "extended" | "lighter";
+export type DATASOURCE = "binance" | "aster" | "grvt" | "bybit" | "moomoo" | "okx" | "hyperliquid" | "pacifica" | "extended" | "lighter";
 
 const BinanceKindSchema = z.enum(["spot", "usds-futures", "coin-futures", "unified", "margin", "funding"]);
 export type BinanceKind = z.infer<typeof BinanceKindSchema>;
@@ -13,6 +14,8 @@ const GrvtKindSchema = z.enum(["main"]);
 export type GrvtKind = z.infer<typeof GrvtKindSchema>;
 const BybitKindSchema = z.enum(["main"]);
 export type BybitKind = z.infer<typeof BybitKindSchema>;
+const MoomooKindSchema = z.enum(["main"]);
+export type MoomooKind = z.infer<typeof MoomooKindSchema>;
 const OkxKindSchema = z.enum(["main"]);
 export type OkxKind = z.infer<typeof OkxKindSchema>;
 const HyperliquidKindSchema = z.enum(["main"]);
@@ -35,6 +38,7 @@ const BaseAccountSchema = z.object({
   accountIndex: z.string().optional().default(""), // lighter
   poolIndex: z.string().optional().default(""), // lighter
   passphrase: z.string().optional().default(""), // okx
+  requestFile: z.string().optional().default(""), // moomoo CUSTOM
 });
 const AccountSchema = <K extends z.ZodTypeAny>(kind: K) =>
   BaseAccountSchema.extend({
@@ -49,6 +53,8 @@ export const GrvtAccountSchema = AccountSchema(GrvtKindSchema);
 export type GrvtAccount = z.infer<typeof GrvtAccountSchema>;
 export const BybitAccountSchema = AccountSchema(BybitKindSchema);
 export type BybitAccount = z.infer<typeof BybitAccountSchema>;
+export const MoomooAccountSchema = AccountSchema(MoomooKindSchema);
+export type MoomooAccount = z.infer<typeof MoomooAccountSchema>;
 export const OkxAccountSchema = AccountSchema(OkxKindSchema);
 export type OkxAccount = z.infer<typeof OkxAccountSchema>;
 export const HyperliquidAccountSchema = AccountSchema(HyperliquidKindSchema);
@@ -110,6 +116,7 @@ const DatasourceConfigSchema = z.object({
   aster: z.array(AsterAccountSchema).optional(),
   grvt: z.array(GrvtAccountSchema).optional(),
   bybit: z.array(BybitAccountSchema).optional(),
+  moomoo: z.array(MoomooAccountSchema).optional(),
   okx: z.array(OkxAccountSchema).optional(),
   hyperliquid: z.array(HyperliquidAccountSchema).optional(),
   pacifica: z.array(PacificaAccountSchema).optional(),
@@ -120,13 +127,14 @@ const DatasourceConfigSchema = z.object({
     || (data.aster?.length ?? 0) > 0
     || (data.grvt?.length ?? 0) > 0
     || (data.bybit?.length ?? 0) > 0
+    || (data.moomoo?.length ?? 0) > 0
     || (data.okx?.length ?? 0) > 0
     || (data.hyperliquid?.length ?? 0) > 0
     || (data.pacifica?.length ?? 0) > 0
     || (data.extended?.length ?? 0) > 0
     || (data.lighter?.length ?? 0) > 0,
   {
-    message: "At least one datasource account of [binance,aster,grvt,bybit,okx,hyperliquid,pacifica,extended,lighter] must be configured",
+    message: "At least one datasource account of [binance,aster,grvt,bybit,moomoo,okx,hyperliquid,pacifica,extended,lighter] must be configured",
     path: ["datasource"],
   }
 );
@@ -183,8 +191,7 @@ function maskConfig(obj: any): any {
   return obj;
 }
 
-
-export function loadConfigFromFile(filePath: string = ".config.yml"): Config {
+export function loadConfigFromFile(filePath: string = paths.configFilePath): Config {
   const absolutePath = path.resolve(filePath);
   if (!fs.existsSync(absolutePath)) {
     throw new Error(`Config file not found: ${absolutePath}`);
