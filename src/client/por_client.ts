@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 let gobalHasStarted = false;
 
 export class PoRClient {
-  private readonly config: Required<AppConfig>;
+  readonly config: Required<AppConfig>;
   private zktlsClient: ZkTLSClient;
   private proverClient: ProverClient;
 
@@ -18,18 +18,33 @@ export class PoRClient {
     this.config = { ...config };
     this.zktlsClient = new ZkTLSClient({ ...config });
     this.proverClient = new ProverClient(config.services.zkvm);
-
-    this.initialize();
   }
 
-  async initialize() {
+  async init(options: any = {}) {
     if (gobalHasStarted) return;
     gobalHasStarted = true;
 
-    const client = new DataServiceClient(this.config.services.data.url);
-    const userToken = this.config.identity.userToken;
-    const projectId = this.config.identity.projectId;
     try {
+      // update interval
+      const client = new DataServiceClient(this.config.services.data.url);
+      const bizId = uuidv4();
+      const userToken = this.config.identity.userToken;
+      const projectId = this.config.identity.projectId;
+      const { offChainJobConfig } = await client.checkPayment(bizId, projectId, userToken);
+      const interval = offChainJobConfig?.jobInterval ?? 0;
+      if (interval > 0) {
+        if (options.scheduler) {
+          options.scheduler.updateInterval(interval * 1000);
+        }
+      }
+    } catch (error) {
+      console.log('get job interval error');
+    }
+
+    try {
+      const client = new DataServiceClient(this.config.services.data.url);
+      const userToken = this.config.identity.userToken;
+      const projectId = this.config.identity.projectId;
       await client.projectConfig(projectId, userToken, { jobInterval: this.config.runtime.jobInterval });
     } catch (error) {
       console.log('projectConfig error', error);
@@ -95,4 +110,10 @@ export class PoRClient {
   async tryWithdrawBalance(limit: number = 100) {
     return await this.zktlsClient.tryWithdrawBalance(limit);
   }
+}
+
+export async function createPorClient(config: AppConfig, options: any = {}) {
+  const client = new PoRClient(config);
+  await client.init(options);
+  return client;
 }

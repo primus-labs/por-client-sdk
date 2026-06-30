@@ -27,7 +27,7 @@ function writeState(file: string, state: SchedulerState) {
 }
 
 
-type JobFn = () => Promise<void>;
+type JobFn = (scheduler: Scheduler) => Promise<void>;
 
 interface SchedulerOptions {
   intervalMs: number; // ms
@@ -40,17 +40,26 @@ export class Scheduler {
   private stopped = false;
   private lastSigintTime = 0;
   private sigintCount = 0;
+  private intervalMs: number; // ms
   private stateFile?: string;
 
   constructor(
-    private job: JobFn,
+    private jobFn: JobFn,
     private opts: SchedulerOptions
   ) {
     if (!this.opts.stopMode) this.opts.stopMode = "delayed";
     this.stateFile = opts.stateFile;
+    this.intervalMs = opts.intervalMs;
 
     process.on("SIGTERM", () => this.stop("SIGTERM"));
     process.on("SIGINT", () => this.stop("SIGINT"));
+  }
+
+  updateInterval(newInterval: number) {
+    if (newInterval !== this.intervalMs) {
+      this.intervalMs = newInterval;
+      console.log(`Interval updated to ${this.intervalMs} ms`);
+    }
   }
 
   stop(signal?: string) {
@@ -72,14 +81,13 @@ export class Scheduler {
   }
 
   async start() {
-    const { intervalMs } = this.opts;
-    console.log(`Start Scheduler at ${new Date().toISOString()} with job interval: ${intervalMs} (ms)`);
+    console.log(`Start Scheduler at ${new Date().toISOString()} with job interval: ${this.intervalMs} ms`);
 
     if (this.stateFile) {
       const state = readState(this.stateFile);
       if (state?.lastStartedAt) {
         const elapsed = Date.now() - state.lastStartedAt;
-        const delay = intervalMs - elapsed;
+        const delay = this.intervalMs - elapsed;
 
         if (delay > 0) {
           console.log(`⏳ Recovering schedule, wait the next in ${delay / 1000.0} s`);
@@ -98,14 +106,14 @@ export class Scheduler {
 
       let shouldStop = false;
       try {
-        await this.job();
+        await this.jobFn(this);
       } catch (err: any) {
         shouldStop = this.opts.shouldStop?.(err) ?? false;
       }
       console.log("✅ job done", new Date().toISOString());
 
       const elapsedMs = Date.now() - startedAt;
-      const delayMs = Math.max(0, intervalMs - elapsedMs);
+      const delayMs = Math.max(0, this.intervalMs - elapsedMs);
 
       if (shouldStop && this.opts.stopMode === "immediate") {
         console.log("🔁 stop immediately due to error");

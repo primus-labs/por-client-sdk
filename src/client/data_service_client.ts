@@ -15,10 +15,16 @@ export interface SubmitTaskResult {
   submitterAddress: string,
 }
 
+export interface OffChainJobConfig {
+  jobInterval?: number;
+  lastSubmitTaskAt?: string;
+}
+
 export interface CheckPaymentResult {
   projectId: string;
   subscriptionType: string;
   disableOffchain?: boolean; // donot run offchain if === true
+  offChainJobConfig?: OffChainJobConfig;
 }
 
 export class DataServiceClient {
@@ -71,6 +77,7 @@ export class DataServiceClient {
       projectId: raw.projectId,
       subscriptionType: raw.subscriptionType,
       disableOffchain: raw.disableOffchain,
+      offChainJobConfig: raw.offChainJobConfig,
     };
   }
 
