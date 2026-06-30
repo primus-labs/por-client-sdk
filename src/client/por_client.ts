@@ -31,11 +31,12 @@ export class PoRClient {
       const userToken = this.config.identity.userToken;
       const projectId = this.config.identity.projectId;
       const { offChainJobConfig } = await client.checkPayment(bizId, projectId, userToken);
-      const interval = offChainJobConfig?.jobInterval ?? 0;
-      if (interval > 0) {
-        if (options.scheduler) {
-          options.scheduler.updateInterval(interval * 1000);
-        }
+      let interval = offChainJobConfig?.jobInterval ?? -1;
+      if (interval <= 0) {
+        interval = this.config.runtime.jobInterval;
+      }
+      if (options.scheduler) {
+        options.scheduler.updateInterval(interval * 1000);
       }
     } catch (error) {
       console.log('get job interval error');

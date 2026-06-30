@@ -1,6 +1,7 @@
 import { sleepMs } from "./utils.js";
 import fs from "fs";
 import path from "path";
+import paths from "./paths.js";
 
 interface SchedulerState {
   lastStartedAt: number;
@@ -48,7 +49,7 @@ export class Scheduler {
     private opts: SchedulerOptions
   ) {
     if (!this.opts.stopMode) this.opts.stopMode = "delayed";
-    this.stateFile = opts.stateFile;
+    this.stateFile = opts.stateFile ?? paths.stateFilePath;
     this.intervalMs = opts.intervalMs;
 
     process.on("SIGTERM", () => this.stop("SIGTERM"));
