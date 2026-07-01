@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { z } from "zod";
 import yaml from "js-yaml";
-import paths from "paths";
+import paths from "./paths.js";
 
 export type DATASOURCE = "binance" | "aster" | "grvt" | "bybit" | "moomoo" | "okx" | "hyperliquid" | "pacifica" | "extended" | "lighter";
 

@@ -109,6 +109,7 @@ export class Scheduler {
       try {
         await this.jobFn(this);
       } catch (err: any) {
+        console.log("job error:", err);
         shouldStop = this.opts.shouldStop?.(err) ?? false;
       }
       console.log("✅ job done", new Date().toISOString());
