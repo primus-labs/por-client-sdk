@@ -91,7 +91,7 @@ Blockchain connection and signer configuration.
 
 | Field   | Type   | Default  | Description                                                                  | Example                     |
 | ------- | ------ | -------- | ---------------------------------------------------------------------------- | --------------------------- |
-| network | string | `"base"` | Target blockchain network (`base` or `base-sepolia`)                         | `"base-sepolia"`            |
+| network | string | `"base"` | Target blockchain network (`base`, `base-sepolia`, `bsc-mainnet`, `bsc-testnet`)                         | `"base-sepolia"`            |
 | rpcUrl  | string | -        | Optional custom RPC URL. If not set, default RPC for the network is used     | `"https://rpc.example.com"` |
 | signer  | object | -        | Transaction signer info (required if `subscriptionType` is `PLAN_SELF_PAID`) | -                           |
 

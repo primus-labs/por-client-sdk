@@ -201,7 +201,9 @@
               "type": "string",
               "enum": [
                 "base",
-                "base-sepolia"
+                "base-sepolia",
+                "bsc-mainnet",
+                "bsc-testnet"
               ],
               "default": "base",
               "description": "Target blockchain network"

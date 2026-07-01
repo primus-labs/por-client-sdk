@@ -99,7 +99,7 @@ const BlockchainSignerSchema = z.object({
 }).strict();
 
 const BlockchainSchema = z.object({
-  network: z.enum(["unknown", "base", "base-sepolia"]).default("unknown"),
+  network: z.enum(["unknown", "base", "base-sepolia", "bsc-mainnet", "bsc-testnet"]).default("unknown"),
   rpcUrl: z.url().optional(),
   signer: BlockchainSignerSchema.optional(),
 }).strict();

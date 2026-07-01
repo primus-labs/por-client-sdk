@@ -251,6 +251,11 @@ export class ZkTLSClient {
         const network = this.config.blockchain.network;
         if (network === "base") { rpcUrl = "https://mainnet.base.org"; }
         else if (network === "base-sepolia") { rpcUrl = "https://sepolia.base.org"; }
+        else if (network === "bsc-mainnet") { rpcUrl = "https://bsc-dataseed.bnbchain.org"; }
+        else if (network === "bsc-testnet") { rpcUrl = "https://bsc-testnet-dataseed.bnbchain.org"; }
+      }
+      if (!rpcUrl) {
+        throw new ClientError("71010", "RPC url is empty.");
       }
 
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl);

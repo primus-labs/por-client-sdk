@@ -31,7 +31,7 @@ app:
   # Blockchain configuration
   # ------------------------------------------------------------------
   blockchain:
-    network: base # base | base-sepolia
+    network: base # base | base-sepolia | bsc-mainnet | bsc-testnet
     rpcUrl: "https://mainnet.base.org" # optional, override default RPC
 
     # Required only if subscription type is PLAN_SELF_PAID
