@@ -19,6 +19,7 @@ export interface Options {
   saveAtt?: boolean;
   projectName?: string;
   algorithmVersion?: string;
+  attUrlOptimization?: boolean;
 }
 
 export function getDefaultOptions(options: Options): Options {
@@ -31,6 +32,7 @@ export function getDefaultOptions(options: Options): Options {
     saveAtt: true,
     projectName: "",
     algorithmVersion: "1.1.1",
+    attUrlOptimization: true,
   };
   return { ...defaults, ...options };
 }

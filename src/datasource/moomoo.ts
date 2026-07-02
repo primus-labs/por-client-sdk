@@ -18,7 +18,7 @@ export class Moomoo extends BaseExchange<MoomooAccount, MoomooKind> {
 
 
   /// User request file
-  public getByRequestFile(verifyType: VERIFY_TYPE = 'HASH_COMPARISON'): RequestParamsOutput {
+  public getByRequestFile(verifyType: VERIFY_TYPE = 'HASH_COMPARISON', options: any = {}): RequestParamsOutput {
     if (!this.hasMain) return undefined;
 
     const origRequests: any[] = [];
@@ -29,6 +29,6 @@ export class Moomoo extends BaseExchange<MoomooAccount, MoomooKind> {
       const requests = readRequestFile(`${paths.requestDataDir}/${acc.requestFile}`);
       origRequests.push(...requests);
     }
-    return makeZkTlsRequestParams(origRequests, verifyType);
+    return makeZkTlsRequestParams(origRequests, verifyType, options);
   }
 }

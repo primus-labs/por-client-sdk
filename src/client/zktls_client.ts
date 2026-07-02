@@ -140,7 +140,7 @@ export class ZkTLSClient {
           noProxy: opts.noProxy,
           getAllJsonResponse: "true",
           extendedParams: JSON.stringify({
-            attUrlOptimization: reqParams.options?.attUrlOptimization ?? true // optimization the url of attestation.
+            attUrlOptimization: reqParams.options?.attUrlOptimization ?? opts.attUrlOptimization // optimization the url of attestation.
           }),
         };
 
