@@ -82,7 +82,17 @@ export function makeZkTlsRequestParams(origRequests: OrigRequest[], verifyType: 
 }
 
 
-export function readRequestFile(filepath: string): OrigRequest[] {
+export interface ReadRequestOptions {
+  /**
+   * eg: ["Content-Type", "Cookie"]
+   */
+  headerIncludeFields?: string[];
+}
+
+export function readRequestFile(
+  filepath: string,
+  options?: ReadRequestOptions
+): OrigRequest[] {
   try {
     if (!fs.existsSync(filepath)) {
       throw new Error(`File not found: ${filepath}`);
@@ -117,14 +127,27 @@ export function readRequestFile(filepath: string): OrigRequest[] {
         return;
       }
 
-      // to-do: more check
+      let headers = item.headers;
+
+      if (options?.headerIncludeFields && headers && typeof headers === "object") {
+        const filtered: Record<string, any> = {};
+
+        for (const key of options.headerIncludeFields) {
+          if (key in headers) {
+            filtered[key] = headers[key];
+          }
+        }
+
+        headers = filtered;
+      }
 
       const validRequest: OrigRequest = {
         url: item.url,
         method: item.method,
         body: item.body,
-        headers: item.headers,
+        headers,
       };
+
       validRequests.push(validRequest);
     });
 

@@ -18,7 +18,7 @@ export class Moomoo extends BaseExchange<MoomooAccount, MoomooKind> {
 
 
   /// User request file
-  public getByRequestFile(verifyType: VERIFY_TYPE = 'HASH_COMPARISON', options: any = {}): RequestParamsOutput {
+  public getByRequestFile(options: any = {}): RequestParamsOutput {
     if (!this.hasMain) return undefined;
 
     const origRequests: any[] = [];
@@ -26,9 +26,9 @@ export class Moomoo extends BaseExchange<MoomooAccount, MoomooKind> {
       if (!acc.requestFile || acc.requestFile == "") {
         throw new Error("Moomoo requestFile is empty!")
       }
-      const requests = readRequestFile(`${paths.requestDataDir}/${acc.requestFile}`);
+      const requests = readRequestFile(`${paths.requestDataDir}/${acc.requestFile}`, options?.readRequestOptions);
       origRequests.push(...requests);
     }
-    return makeZkTlsRequestParams(origRequests, verifyType, options);
+    return makeZkTlsRequestParams(origRequests, options?.verifyType, options);
   }
 }
