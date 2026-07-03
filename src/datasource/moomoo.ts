@@ -1,5 +1,5 @@
 import { makeZkTlsRequestParams, readRequestFile } from "./helper.js";
-import { VERIFY_TYPE, RequestParamsOutput } from "../types.js";
+import { RequestParamsOutput } from "../types.js";
 import { MoomooKind, MoomooAccount, DatasourceConfig } from "../config_schema.js";
 import { BaseExchange } from "./base_exchange.js";
 import paths from "../paths.js";
