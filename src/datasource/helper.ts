@@ -128,13 +128,19 @@ export function readRequestFile(
       }
 
       let headers = item.headers;
+      const headersLowerMap = new Map<string, string>();
+      for (const key of Object.keys(headers)) {
+        headersLowerMap.set(key.toLowerCase(), key);
+      }
 
       if (options?.headerIncludeFields && headers && typeof headers === "object") {
         const filtered: Record<string, any> = {};
 
-        for (const key of options.headerIncludeFields) {
-          if (key in headers) {
-            filtered[key] = headers[key];
+        for (const field of options.headerIncludeFields) {
+          const lowerField = field.toLowerCase();
+          const matchedKey = headersLowerMap.get(lowerField);
+          if (matchedKey) {
+            filtered[field] = headers[matchedKey];
           }
         }
 
