@@ -4,6 +4,7 @@ import { Aster } from "./aster.js";
 import { Grvt } from "./grvt.js";
 import { Bybit } from "./bybit.js";
 import { Moomoo } from "./moomoo.js";
+import { Tiger } from "./tiger.js";
 import { Okx } from "./okx.js";
 import { Hyperliquid } from "./hyperliquid.js";
 import { Pacifica } from "./pacifica.js";
@@ -24,6 +25,7 @@ export class DatasourceManager {
   public readonly grvt?: Grvt;
   public readonly bybit?: Bybit;
   public readonly moomoo?: Moomoo;
+  public readonly tiger?: Tiger;
   public readonly okx?: Okx;
   public readonly hyperliquid?: Hyperliquid;
   public readonly pacifica?: Pacifica;
@@ -36,6 +38,7 @@ export class DatasourceManager {
     if (config.grvt) this.grvt = new Grvt(config.grvt);
     if (config.bybit) this.bybit = new Bybit(config.bybit);
     if (config.moomoo) this.moomoo = new Moomoo(config.moomoo);
+    if (config.tiger) this.tiger = new Tiger(config.tiger);
     if (config.okx) this.okx = new Okx(config.okx);
     if (config.hyperliquid) this.hyperliquid = new Hyperliquid(config.hyperliquid);
     if (config.pacifica) this.pacifica = new Pacifica(config.pacifica);

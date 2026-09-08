@@ -389,6 +389,40 @@
             }
           }
         },
+        "tiger": {
+          "type": "array",
+          "description": "tiger",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "tigerId",
+              "account",
+              "privateKey"
+            ],
+            "properties": {
+              "enabled": {
+                "$ref": "#/definitions/enabled"
+              },
+              "description": {
+                "$ref": "#/definitions/description"
+              },
+              "kind": {
+                "$ref": "#/definitions/generalKind"
+              },
+              "tigerId": {
+                "$ref": "#/definitions/general"
+              },
+              "account": {
+                "$ref": "#/definitions/general"
+              },
+              "privateKey": {
+                "$ref": "#/definitions/general"
+              }
+            }
+          }
+        },
         "okx": {
           "type": "array",
           "description": "Okx exchange account keys",

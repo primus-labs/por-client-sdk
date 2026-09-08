@@ -4,7 +4,8 @@ import { z } from "zod";
 import yaml from "js-yaml";
 import paths from "./paths.js";
 
-export type DATASOURCE = "binance" | "aster" | "grvt" | "bybit" | "moomoo" | "okx" | "hyperliquid" | "pacifica" | "extended" | "lighter";
+export type DATASOURCE = "binance" | "aster" | "grvt" | "bybit" | "moomoo" | "tiger" |
+  "okx" | "hyperliquid" | "pacifica" | "extended" | "lighter";
 
 const BinanceKindSchema = z.enum(["spot", "usds-futures", "coin-futures", "unified", "margin", "funding"]);
 export type BinanceKind = z.infer<typeof BinanceKindSchema>;
@@ -16,6 +17,8 @@ const BybitKindSchema = z.enum(["main"]);
 export type BybitKind = z.infer<typeof BybitKindSchema>;
 const MoomooKindSchema = z.enum(["main"]);
 export type MoomooKind = z.infer<typeof MoomooKindSchema>;
+const TigerKindSchema = z.enum(["main"]);
+export type TigerKind = z.infer<typeof TigerKindSchema>;
 const OkxKindSchema = z.enum(["main"]);
 export type OkxKind = z.infer<typeof OkxKindSchema>;
 const HyperliquidKindSchema = z.enum(["main"]);
@@ -39,6 +42,9 @@ const BaseAccountSchema = z.object({
   poolIndex: z.string().optional().default(""), // lighter
   passphrase: z.string().optional().default(""), // okx
   requestFile: z.string().optional().default(""), // moomoo CUSTOM
+  tigerId: z.string().optional().default(""), // tiger
+  account: z.string().optional().default(""), // tiger
+  privateKey: z.string().optional().default(""), // tiger
 });
 const AccountSchema = <K extends z.ZodTypeAny>(kind: K) =>
   BaseAccountSchema.extend({
@@ -55,6 +61,8 @@ export const BybitAccountSchema = AccountSchema(BybitKindSchema);
 export type BybitAccount = z.infer<typeof BybitAccountSchema>;
 export const MoomooAccountSchema = AccountSchema(MoomooKindSchema);
 export type MoomooAccount = z.infer<typeof MoomooAccountSchema>;
+export const TigerAccountSchema = AccountSchema(TigerKindSchema);
+export type TigerAccount = z.infer<typeof TigerAccountSchema>;
 export const OkxAccountSchema = AccountSchema(OkxKindSchema);
 export type OkxAccount = z.infer<typeof OkxAccountSchema>;
 export const HyperliquidAccountSchema = AccountSchema(HyperliquidKindSchema);
@@ -117,6 +125,7 @@ const DatasourceConfigSchema = z.object({
   grvt: z.array(GrvtAccountSchema).optional(),
   bybit: z.array(BybitAccountSchema).optional(),
   moomoo: z.array(MoomooAccountSchema).optional(),
+  tiger: z.array(TigerAccountSchema).optional(),
   okx: z.array(OkxAccountSchema).optional(),
   hyperliquid: z.array(HyperliquidAccountSchema).optional(),
   pacifica: z.array(PacificaAccountSchema).optional(),
@@ -128,13 +137,14 @@ const DatasourceConfigSchema = z.object({
     || (data.grvt?.length ?? 0) > 0
     || (data.bybit?.length ?? 0) > 0
     || (data.moomoo?.length ?? 0) > 0
+    || (data.tiger?.length ?? 0) > 0
     || (data.okx?.length ?? 0) > 0
     || (data.hyperliquid?.length ?? 0) > 0
     || (data.pacifica?.length ?? 0) > 0
     || (data.extended?.length ?? 0) > 0
     || (data.lighter?.length ?? 0) > 0,
   {
-    message: "At least one datasource account of [binance,aster,grvt,bybit,moomoo,okx,hyperliquid,pacifica,extended,lighter] must be configured",
+    message: "At least one datasource account of [binance,aster,grvt,bybit,moomoo,tiger,okx,hyperliquid,pacifica,extended,lighter] must be configured",
     path: ["datasource"],
   }
 );
