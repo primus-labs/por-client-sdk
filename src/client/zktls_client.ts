@@ -56,25 +56,6 @@ export class ZkTLSClient {
 
     while (true) {
       try {
-        {
-          const client = new DataServiceClient(this.config.services.data.url);
-          const bizId = uuidv4();
-          const userToken = this.config.identity.userToken;
-          const projectId = this.config.identity.projectId;
-          const { subscriptionType, disableOffchain } = await client.checkPayment(bizId, projectId, userToken);
-          console.log(`SubscriptionType: ${subscriptionType}`);
-          if (disableOffchain === true) {
-            throw new ClientError("71009", "Disabled offchain.");
-          }
-          this.planType = 'SUBSCRIPTION';
-          if (subscriptionType === "PLAN_SELF_PAID") {
-            this.planType = 'SELF';
-            if (!this.config.blockchain.signer?.privateKey) {
-              throw new ClientError("71008", "Please set your private key at `app.blockchain.signer.privateKey`");
-            }
-          }
-        }
-
         let result;
         if (this.planType === 'SELF') {
           result = await this.primusNetwork.submitTask(attestParams);
@@ -105,6 +86,113 @@ export class ZkTLSClient {
       }
     }
   }
+
+  /**
+   * Batch Submit zkTLS task with retry and exponential backoff
+   */
+  private async _batchSubmitZkTLSTaskWithRetry(
+    taskCount: number,
+    maxRetries = 4,
+    baseDelay = 1000
+  ): Promise<{ attestParams: any, submitResult: any }[] | undefined> {
+    if (!(this.planType === 'SUBSCRIPTION' && taskCount > 1)) {
+      return undefined;
+    }
+
+    let attempt = 0;
+    const start = Date.now();
+    console.log("📝 Batch Submitting zkTLS task...");
+
+    while (true) {
+      try {
+        const client = new DataServiceClient(this.config.services.data.url);
+        const bizId = uuidv4();
+        const userToken = this.config.identity.userToken;
+        const projectId = this.config.identity.projectId;
+        const batchSubmitTaskResults = await client.batchSubmitTask(bizId, projectId, userToken, taskCount);
+        if (batchSubmitTaskResults.length !== taskCount) {
+          throw new ClientError("71014", `Batch Submitting zkTLS task results mismatch. expect ${taskCount} got ${batchSubmitTaskResults.length}`);
+        }
+        const results = [];
+        for (const res of batchSubmitTaskResults) {
+          const { taskId, taskTxHash, taskAttestors, submitterAddress } = res;
+          const submitResult = { taskId, taskTxHash, taskAttestors };
+          const attestParams = { address: submitterAddress };
+          results.push({ attestParams, submitResult });
+        }
+
+        console.log(`✅ batch submitTask done (${Date.now() - start}ms):`, JSON.stringify(results));
+        return results;
+      } catch (err: any) {
+        const NO_RETRY_CODES = ["72001", "71008", "71009", "71014"];
+        if (err instanceof ClientError && NO_RETRY_CODES.includes(err.code)) throw err;
+
+        attempt++;
+        console.warn(`⚠️ batch submitTask attempt ${attempt} failed: ${err.message}`);
+        if (attempt > maxRetries) {
+          throw new ClientError("71013", `Batch Submitting zkTLS task failed after ${maxRetries} retries`, makeErrData(err));
+        }
+
+        const delay = baseDelay * 2 ** (attempt - 1);
+        console.warn(`⏳ batch submitTask retrying in ${delay}ms...`);
+        await sleepMs(delay);
+      }
+    }
+  }
+
+
+  /**
+   * Get SubscriptionType
+   */
+  private async _getSubscriptionTypeWithRetry(
+    maxRetries = 4,
+    baseDelay = 1000
+  ): Promise<void> {
+    if (this.planType !== 'UNKNOWN') { return; }
+
+    let attempt = 0;
+    const start = Date.now();
+    console.log("📝 Getting subscription type ...");
+
+    while (true) {
+      try {
+        const client = new DataServiceClient(this.config.services.data.url);
+        const bizId = uuidv4();
+        const userToken = this.config.identity.userToken;
+        const projectId = this.config.identity.projectId;
+        const { subscriptionType, disableOffchain } = await client.checkPayment(bizId, projectId, userToken);
+        console.log(`SubscriptionType: ${subscriptionType}`);
+        if (disableOffchain === true) {
+          throw new ClientError("71009", "Disabled offchain.");
+        }
+        this.planType = 'SUBSCRIPTION';
+        if (subscriptionType === "PLAN_SELF_PAID") {
+          this.planType = 'SELF';
+          if (!this.config.blockchain.signer?.privateKey) {
+            throw new ClientError("71008", "Please set your private key at `app.blockchain.signer.privateKey`");
+          }
+        }
+
+        console.log(`✅ getSubscriptionType done (${Date.now() - start}ms):`, this.planType);
+
+        return;
+      } catch (err: any) {
+        const NO_RETRY_CODES = ["72001", "71008", "71009"]; // from data service client
+        if (err instanceof ClientError && NO_RETRY_CODES.includes(err.code)) throw err;
+
+        attempt++;
+        console.warn(`⚠️ getSubscriptionType attempt ${attempt} failed: ${err.message}`);
+        if (attempt > maxRetries) {
+          throw new ClientError("71011", `GetSubscriptionType failed after ${maxRetries} retries`, makeErrData(err));
+        }
+
+        const delay = baseDelay * 2 ** (attempt - 1);
+        console.warn(`⏳ getSubscriptionType retrying in ${delay}ms...`);
+        await sleepMs(delay);
+      }
+    }
+  }
+
 
   /**
    * Run attestation with retries
@@ -240,7 +328,11 @@ export class ZkTLSClient {
   /**
    * Main entry: perform zkTLS attestation and task flow
    */
-  private async _doZkTLS(requestParams: RequestParams, options: Options = {}, requestParamsCallback?: RequestParamsCallback): Promise<any> {
+  private async _doZkTLS(requestParams: RequestParams,
+    options: Options = {},
+    requestParamsCallback?: RequestParamsCallback,
+    submitZkTLSTaskResult?: { attestParams: any, submitResult: any },
+  ): Promise<any> {
     const startTime = Date.now();
 
     const opts = getDefaultOptions(options);
@@ -263,14 +355,19 @@ export class ZkTLSClient {
       const wallet = privateKey ? new ethers.Wallet(privateKey, provider) : provider;
       const { chainId } = await provider.getNetwork();
 
-      const attestParams = { address: "" };
-      if (privateKey) {
+      await this._initializePrimusNetwork(opts, wallet, chainId);
+
+      const attestParams = {
+        ...(submitZkTLSTaskResult?.attestParams ?? {}),
+        address: submitZkTLSTaskResult?.attestParams?.address ?? "",
+      };
+      if (attestParams.address === "" && privateKey) {
         attestParams.address = (wallet as ethers.Wallet).address;
       }
 
-      await this._initializePrimusNetwork(opts, wallet, chainId);
-
-      const submitResult = await this._submitZkTLSTaskWithRetry(opts, attestParams, 4, 5000);
+      const submitResult =
+        submitZkTLSTaskResult?.submitResult ??
+        (await this._submitZkTLSTaskWithRetry(opts, attestParams, 4, 5000));
 
       const attestResult = await this._attestWithRetry(
         requestParams,
@@ -298,15 +395,34 @@ export class ZkTLSClient {
   }
 
   async doZkTLS(params: RequestParamsInput, options: Options = {}): Promise<Record<string, any>> {
+    let taskCount = 0;
+    for (const [_key, cb] of Object.entries(params)) {
+      if (!cb) continue; // skip undefined cb
+      const reqParams = await cb();
+      if (!reqParams) continue; // skip undefined requestParams
+
+      taskCount += 1;
+    }
+    if (taskCount === 0) {
+      throw new ClientError("71012", "No available tasks.");
+    }
+
+    await this._getSubscriptionTypeWithRetry();
+    const submitZkTLSTaskResults = await this._batchSubmitZkTLSTaskWithRetry(taskCount, 4, 5000);
+
     const attestations: Record<string, any> = {}; // key => attestation
 
+    let i = 0;
     for (const [key, cb] of Object.entries(params)) {
       if (!cb) continue; // skip undefined cb
       const reqParams = await cb();
       if (!reqParams) continue; // skip undefined requestParams
 
+      const submitZkTLSTaskResult = submitZkTLSTaskResults?.[i];
+      i++;
+
       console.log(`Run ${key}`)
-      attestations[key] = await this._doZkTLS(reqParams, options, cb as RequestParamsCallback);
+      attestations[key] = await this._doZkTLS(reqParams, options, cb as RequestParamsCallback, submitZkTLSTaskResult);
     }
 
     attestations["__meta__"] = {
@@ -317,6 +433,7 @@ export class ZkTLSClient {
   }
 
   async tryWithdrawBalance(limit: number = 100) {
+    await this._getSubscriptionTypeWithRetry();
     if (this.planType != "SELF") return true;
 
     try {

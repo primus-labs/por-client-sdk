@@ -21,9 +21,6 @@ export class PoRClient {
   }
 
   async init(options: any = {}) {
-    if (gobalHasStarted) return;
-    gobalHasStarted = true;
-
     try {
       // update interval
       const client = new DataServiceClient(this.config.services.data.url);
@@ -41,6 +38,9 @@ export class PoRClient {
     } catch (error) {
       console.log('get job interval error');
     }
+
+    if (gobalHasStarted) return;
+    gobalHasStarted = true;
 
     try {
       const client = new DataServiceClient(this.config.services.data.url);

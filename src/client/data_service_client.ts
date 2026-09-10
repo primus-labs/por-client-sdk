@@ -29,7 +29,7 @@ export interface CheckPaymentResult {
 
 export class DataServiceClient {
   private readonly client: AxiosInstance;
-  constructor(baseURL: string, timeout: number = 30_000) {
+  constructor(baseURL: string, timeout: number = 60_000) {
     this.client = axios.create({ baseURL, timeout });
   }
 
@@ -55,6 +55,27 @@ export class DataServiceClient {
       taskAttestors: raw.taskAttestors,
       submitterAddress: raw.submitterAddress,
     };
+  }
+
+  async batchSubmitTask(
+    bizId: string,
+    projectId: string,
+    userToken: string,
+    taskCount: number = 1,
+  ): Promise<SubmitTaskResult[]> {
+    if (taskCount <= 0) { taskCount = 1; }
+    const res = await this.client.get<ApiResponse<SubmitTaskResult[]>>(
+      "/public/program/batchSubmitTask",
+      {
+        params: { bizId, projectId, taskCount },
+        headers: {
+          "POR-TOKEN": userToken,
+        },
+      }
+    );
+
+    const raw = this.unwrap('batchSubmitTask', res.data);
+    return raw;
   }
 
   async checkPayment(
